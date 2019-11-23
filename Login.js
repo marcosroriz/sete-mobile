@@ -1,7 +1,5 @@
 import React from 'react';
-import {
-  ActivityIndicator, Image, Text, TextInput, TouchableOpacity, View
-} from 'react-native';
+import { ActivityIndicator, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import * as firebase from "firebase";
 import styles from './style.js';
@@ -17,14 +15,16 @@ export default class Login extends React.Component {
   onPressSignIn() {
     this.setState({
       authenticating: true
+    });
+
+    firebase.auth()
+    .signInWithEmailAndPassword(this.state.email, this.state.password)
+    .then((firebaseUser) => {
+      console.log(firebaseUser);
+      console.log("LOGIN COM sucesso");
+      this.props.navigation.navigate("Dashboard");
     })
-    firebase.auth().signInWithEmailAndPassword(this.state.email,
-      this.state.password)
-      .then((firebaseUser) => {
-        console.log("FIZ LOGIN");
-        this.props.navigation.navigate("Dashboard")
-      })
-      .catch((err) => console.log(err))
+    .catch((err) => console.log(err))
   }
 
   renderCurrentState() {

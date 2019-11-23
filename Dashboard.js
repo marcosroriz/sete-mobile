@@ -1,57 +1,73 @@
 import React from 'react';
-import {
-  ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View
-} from 'react-native';
-
-import { Provider as PaperProvider } from 'react-native-paper';
+import { ActivityIndicator, Image, ScrollView, View } from 'react-native';
+import { Appbar, List, Text, Divider, Provider as PaperProvider } from 'react-native-paper';
 import * as firebase from "firebase";
 import styles from './style.js';
 
 export default class Dashboard extends React.Component {
 
   state = {
-    email: '',
-    password: '',
-    authenticating: false
+    expanded: true,
+  };
+
+  handlePress = () => {
+    this.setState({ expanded: !this.state.expanded });
+  };
+
+  handleNavigate = (destination) => {
+    this.props.navigation.navigate(destination);
+  };
+
+  componentWillMount() {
+    firebase.auth().onAuthStateChanged(async user => {
+      if (user) {
+        console.log("LOGADO");
+      } else {
+        console.log("NÃO LOGOU");
+      }
+    });
   }
 
-  onPressSignIn() {
-    this.setState({
-      authenticating: true
-    })
-    firebase.auth().signInWithEmailAndPassword(this.state.email,
-      this.state.password)
-      .then((firebaseUser) => {
-        console.log("deu certo");
-        console.log(firebaseUser);
-      })
-      .catch((err) => console.log(err))
-  }
-
-  renderCurrentState() {
-    if (this.state.authenticating) {
-      return (
-        <View style={styles.container}>
-          <ActivityIndicator size="large" />
-        </View>
-      )
-    } else {
-      return (
-        <View style={styles.container}>
-          <Image
-            source={require('./img/logo.png')}
-            style={styles.logo}
-          />
-          <Text style={styles.txtLabel}>LOGADO</Text>
-        </View>
-      )
-
-    }
-  }
   render() {
     return (
       <PaperProvider>
-        {this.renderCurrentState()}
+        <Appbar.Header style={styles.headerBar}>
+          <Appbar.Content
+            title="SETE"
+          />
+        </Appbar.Header>
+        <View style={styles.container}>
+          <ScrollView style={styles.scrollContainer}>
+            <List.Section>
+              <List.Item
+                left={props => <List.Icon {...props} icon="face" />}
+                title="Alunos"
+                onPress={() => this.handleNavigate("ListarAlunos")}
+              />
+              <List.Item
+                left={props => <List.Icon {...props} icon="school" />}
+                title="Escolas"
+              />
+              <List.Item
+                left={props => <List.Icon {...props} icon="account-details" />}
+                title="Motoristas"
+              />
+              <List.Item
+                left={props => <List.Icon {...props} icon="bus" />}
+                title="Frota"
+              />
+              <List.Item
+                left={props => <List.Icon {...props} icon="gas-station" />}
+                title="Fornecedores"
+              />
+              <List.Item
+                left={props => <List.Icon {...props} icon="map-marker-path" />}
+                title="Rotas"
+                onPress={() => this.handleNavigate("MapaRotas")}
+              />
+            </List.Section>
+          </ScrollView>
+        </View>
       </PaperProvider>
     )
   }

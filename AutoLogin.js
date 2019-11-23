@@ -1,8 +1,5 @@
 import React from 'react';
-import {
-  ActivityIndicator, StatusBar, Text, View
-} from 'react-native';
-
+import { ActivityIndicator, View } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import * as firebase from "firebase";
 import styles from './style.js';
@@ -25,20 +22,11 @@ export default class AutoLogin extends React.Component {
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
 
-    // Check if use has login
-    // firebase.auth().onAuthStateChanged(async user => {
-    //   if (user) {
-    //     console.log("LOGADO");
-    //     this.props.navigation.navigate("Dashboard");
-    //   } else {
-    //     console.log("NÃO LOGOU");
-    //     this.props.navigation.navigate("Login");
-    //   }
-    // });
+    // Forçar o Sign Out para evitar cache no modo desenvolvimento
+    // Retirar o código abaixo em produção
     firebase.auth()
       .signOut()
       .then(() => {
-        console.log("AQUI");
         this.props.navigation.navigate("Login")
       })
       .catch((err) => console.log("ERROR", err));

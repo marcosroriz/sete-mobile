@@ -1,4 +1,5 @@
-import { StyleSheet } from 'react-native';
+import Constants from 'expo-constants';
+import { StyleSheet, Dimensions } from 'react-native';
 
 export default StyleSheet.create({
     container: {
@@ -7,7 +8,31 @@ export default StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#EFF2F7',
         fontSize: 30,
-        paddingBottom: 50,
+        paddingBottom: 30,
+    },
+    scrollContainer: {
+        flex: 1,
+        width: "100%"
+    },
+    headerBar: {
+        backgroundColor: "#ffc738"
+    },
+    headerBarTitle: {
+        color: "red",
+        fontWeight: "700"
+    },
+    image: {
+        height: 40,
+        width: 40,
+        margin: 8,
+    },
+    overlay: {
+        backgroundColor: 'rgba(255,0,0,0.5)',
+    },
+    imgBg: {
+        width: '100%',
+        height: '100%',
+        flex: 1
     },
     logo: {
         width: 200,
@@ -55,5 +80,9 @@ export default StyleSheet.create({
         margin: 10,
         width: "50%",
         paddingLeft: 20
-    }
+    },
+    mapView: {
+        width: Dimensions.get('window').width,
+        height: Dimensions.get('window').height,
+    },
 });
