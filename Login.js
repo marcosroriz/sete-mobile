@@ -16,7 +16,8 @@ export default class Login extends React.Component {
     this.setState({
       authenticating: true
     });
-
+    this.props.navigation.navigate("Dashboard");
+    /*
     firebase.auth()
     .signInWithEmailAndPassword(this.state.email, this.state.password)
     .then((firebaseUser) => {
@@ -24,7 +25,7 @@ export default class Login extends React.Component {
       console.log("LOGIN COM sucesso");
       this.props.navigation.navigate("Dashboard");
     })
-    .catch((err) => console.log(err))
+    .catch((err) => console.log(err)) */
   }
 
   renderCurrentState() {

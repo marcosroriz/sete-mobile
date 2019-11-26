@@ -4,7 +4,7 @@ import { Appbar, DataTable, List, Text, Divider, Provider as PaperProvider } fro
 import * as firebase from "firebase";
 import styles from './style.js';
 
-export default class ListarAlunos extends React.Component {
+export default class ListarEscolas extends React.Component {
 
   Alunos = [
       {
@@ -60,30 +60,30 @@ export default class ListarAlunos extends React.Component {
           />
         </Appbar.Header>
         <View style={styles.container}>
-        <DataTable>
-          <DataTable.Header>
-            <DataTable.Title>Nome</DataTable.Title>
-            <DataTable.Title numeric>Escola</DataTable.Title>
-            <DataTable.Title numeric>Turno</DataTable.Title>
-          </DataTable.Header>
-          {
-           this.Alunos.map((alunos, index)=> {
-             return (
-              <DataTable.Row key={index}>
-                <DataTable.Cell>{alunos.Nome}</DataTable.Cell>
-                <DataTable.Cell>{alunos.Escola}</DataTable.Cell>
-                <DataTable.Cell>{alunos.Turno}</DataTable.Cell>
-              </DataTable.Row>
-             )
-           }) 
-          }
-          <DataTable.Pagination
-            page={1}
-            numberOfPages={3}
-            onPageChange={(page) => { console.log(page); }}
-            label="1-2 of 6"
-          />
-        </DataTable>
+          <DataTable>
+            <DataTable.Header>
+              <DataTable.Title>Nome</DataTable.Title>
+              <DataTable.Title numeric>Escola</DataTable.Title>
+              <DataTable.Title numeric>Turno</DataTable.Title>
+            </DataTable.Header>
+            {
+            this.Alunos.map((alunos, index)=> {
+              return (
+                <DataTable.Row key={index}>
+                  <DataTable.Cell>{alunos.Nome}</DataTable.Cell>
+                  <DataTable.Cell>{alunos.Escola}</DataTable.Cell>
+                  <DataTable.Cell>{alunos.Turno}</DataTable.Cell>
+                </DataTable.Row>
+              )
+            }) 
+            }
+            <DataTable.Pagination
+              page={1}
+              numberOfPages={3}
+              onPageChange={(page) => { console.log(page); }}
+              label="1-2 of 6"
+            />
+          </DataTable>
         </View>
       </PaperProvider>
     )

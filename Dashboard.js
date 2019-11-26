@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Image, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Appbar, List, Text, Divider, Provider as PaperProvider } from 'react-native-paper';
 import * as firebase from "firebase";
 import styles from './style.js';
@@ -42,11 +42,12 @@ export default class Dashboard extends React.Component {
               <List.Item
                 left={props => <List.Icon {...props} icon="face" />}
                 title="Alunos"
-                onPress={() => this.handleNavigate("ListarAlunos")}
+                onPress={() => this.handleNavigate("ListaAlunos")}
               />
               <List.Item
                 left={props => <List.Icon {...props} icon="school" />}
                 title="Escolas"
+                onPress={() => this.handleNavigate("ListarEscolas")}
               />
               <List.Item
                 left={props => <List.Icon {...props} icon="account-details" />}
