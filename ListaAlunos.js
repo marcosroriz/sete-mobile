@@ -2,8 +2,13 @@ import React from 'react';
 import { View, ScrollView } from 'react-native';
 import { Appbar, List, Provider as PaperProvider } from 'react-native-paper';
 
-import * as firebase from "firebase";
 import styles from './style.js';
+
+import * as firebase from "firebase/app";
+
+import "firebase/auth";
+import "firebase/firestore";
+
 
 export default class ListaAlunos extends React.Component {
   constructor(props) {
@@ -107,13 +112,19 @@ export default class ListaAlunos extends React.Component {
   ] 
 
   componentWillMount() {
-    firebase.auth().onAuthStateChanged(async user => {
-      if (user) {
-        console.log("LOGADO");
-      } else {
-        console.log("NÃO LOGOU");
-      }
-    });
+    firebase.auth().signInWithEmailAndPassword('marcos@ufg.br', '123456')
+    .then((firebaseUser) => {
+      console.log(firebaseUser, "/data/"+ firebaseUser.user.uid+"/alunos");
+      console.log("LOGIN COM sucesso");
+      var db = firebase.firestore();
+      let dataCollecton = db.collection("/data/"+ firebaseUser.user.uid+"/alunos");
+      dataCollecton.where("author", "==", firebaseUser.user.uid).get().then((querySnapshot) => {
+        console.log("OIOIIOOIO");
+        //Setar lista dos alunos;
+        console.log(querySnapshot)
+      });
+    })
+    .catch((err) => console.log('aaa',err)).catch((err) => console.log("ERROR", err))
   }
 
   goBackToDashboard = () => {
@@ -142,12 +153,12 @@ export default class ListaAlunos extends React.Component {
             <ScrollView>
               {
                 this.Alunos.map((alunos, index)=> {
-                  console.log("ALUNO", alunos)
                   return (
                     <List.Accordion
                       key={alunos._id}
                       title={alunos.info.nome}
                       left={props => <List.Icon {...props} icon="face" />}
+                      expanded={false}
                       onPress={() => this.goToAluno(alunos.info)}
                     />
                   )

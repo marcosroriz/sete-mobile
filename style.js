@@ -10,6 +10,13 @@ export default StyleSheet.create({
         fontSize: 30,
         paddingBottom: 30,
     },
+    containerTable: {
+        flex: 1,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        backgroundColor: '#EFF2F7',
+        fontSize: 30,
+    },
     scrollContainer: {
         flex: 1,
         width: "100%"

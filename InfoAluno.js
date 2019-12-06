@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Appbar, DataTable, Provider as PaperProvider } from 'react-native-paper';
 
 import * as firebase from "firebase";
@@ -9,7 +9,6 @@ export default class AlunoInfo extends React.Component {
   constructor(props){
     super(props);
     const { navigation } = this.props;
-    //console.log("PROPS", navigation.state.params.Alunos)
     this.state = {
       info: navigation.state.params.infoAluno
     }
@@ -28,6 +27,15 @@ export default class AlunoInfo extends React.Component {
   goBackToDashboard = () => {
     this.props.navigation.navigate("ListaAlunos");
   }
+
+  goToMap = () => {
+    console.log(this.state)
+    /*
+    this.props.navigation.navigate("InfoAluno", {
+      
+    });
+    */
+  }
   
   render() {
     return (
@@ -40,7 +48,7 @@ export default class AlunoInfo extends React.Component {
             title="SETE"
           />
         </Appbar.Header>
-        <View style={styles.container}>
+        <View style={styles.containerTable}>
           <DataTable>
             <DataTable.Header>
               <DataTable.Title>
@@ -64,6 +72,9 @@ export default class AlunoInfo extends React.Component {
               <DataTable.Cell>{this.state.info.cidade}</DataTable.Cell>              
             </DataTable.Row>
           </DataTable>
+          <TouchableOpacity style={styles.btnContainer} onPress={() => this.goToMap()}>
+            <Text style={styles.txtBtn}>Ver mapa</Text>
+          </TouchableOpacity>
         </View>
       </PaperProvider>
     )
