@@ -1,7 +1,9 @@
 import React from 'react';
-import { ActivityIndicator, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, ActivityIndicator, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
+
 import * as firebase from "firebase";
+
 import styles from './style.js';
 
 export default class Login extends React.Component {
@@ -16,16 +18,27 @@ export default class Login extends React.Component {
     this.setState({
       authenticating: true
     });
-    this.props.navigation.navigate("Dashboard");
-    /*
+
     firebase.auth()
-    .signInWithEmailAndPassword(this.state.email, this.state.password)
-    .then((firebaseUser) => {
-      console.log(firebaseUser);
-      console.log("LOGIN COM sucesso");
-      this.props.navigation.navigate("Dashboard");
-    })
-    .catch((err) => console.log(err)) */
+      .signInWithEmailAndPassword(this.state.email, this.state.password)
+      .then((firebaseUser) => {
+        console.log(firebaseUser);
+        console.log("LOGIN COM SUCESSO");
+        this.props.navigation.navigate("Dashboard");
+      })
+      .catch((err) => {
+        console.log(err);
+        Alert.alert("Erro!", "Usuário ou senha inválido",
+          [{
+            text: "OK",
+            onPress: () => {
+              console.log("Não logou")
+              this.setState({
+                authenticating: false
+              });
+            }
+          }]);
+      })
   }
 
   renderCurrentState() {
@@ -37,7 +50,7 @@ export default class Login extends React.Component {
       )
     } else {
       return (
-        <View style={styles.container}>
+        <View style={styles.loginContainer}>
           <Image
             source={require('./img/logo.png')}
             style={styles.logo}
@@ -64,9 +77,14 @@ export default class Login extends React.Component {
           <TouchableOpacity style={styles.btnContainer} onPress={() => this.onPressSignIn()}>
             <Text style={styles.txtBtn}>Entrar</Text>
           </TouchableOpacity>
+          <View style={styles.rodapeContainer}>
+            <Image
+              style={styles.logoRodape}
+              source={require("./img/logo-cecate2.png")} />
+          </View>
+
         </View>
       )
-
     }
   }
   render() {

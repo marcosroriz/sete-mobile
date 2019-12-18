@@ -2,10 +2,11 @@ import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 
 import AutoLogin from './AutoLogin.js'
 import Dashboard from './Dashboard'
-import ListaAlunos from './ListaAlunos.js'
+import ListarAlunos from './ListarAlunos.js'
 import ListarEscolas from './ListarEscolas.js'
 import Login from './Login.js'
-import MapaRotas from './MapaRotas.js'
+import MapaAluno from './MapaAluno'
+import MapaRota from './MapaRota.js'
 import InfoAluno from './InfoAluno.js'
 
 export default createAppContainer(
@@ -14,10 +15,11 @@ export default createAppContainer(
       AutoLogin,
       Dashboard,
       Login,
-      ListaAlunos,
+      ListarAlunos,
       ListarEscolas,
       InfoAluno,
-      MapaRotas
+      MapaAluno,
+      MapaRota
     },
     {
       initialRouteName: 'AutoLogin',
