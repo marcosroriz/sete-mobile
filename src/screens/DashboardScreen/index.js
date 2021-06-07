@@ -145,19 +145,6 @@ export class DashboardScreen extends Component {
                                         onPress={() => this.props.navigation.navigate("GenerateRouteScreen")} />
                                     <List.Item title="Mapa de Escolas Atendidas" />
                                 </List.Accordion>
-
-                                <List.Accordion
-                                    title="Escolas"
-                                    left={props => <List.Icon {...props} icon="school" />}>
-                                    <List.Item title="Listar Escolas Atendidas" />
-                                    <List.Item title="Mapa de Escolas Atendidas" />
-                                </List.Accordion>
-                                <List.Accordion
-                                    title="Escolas"
-                                    left={props => <List.Icon {...props} icon="school" />}>
-                                    <List.Item title="Listar Escolas Atendidas" />
-                                    <List.Item title="Mapa de Escolas Atendidas" />
-                                </List.Accordion>
                             </List.Section>
                         </ScrollView>
                     </View>
