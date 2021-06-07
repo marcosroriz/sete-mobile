@@ -1,7 +1,7 @@
 import firebase from "firebase";
 import { USER_STATE_CHANGE } from "../constants/index";
 
-export function fetchUserDataAction(uid) {
+export function finishLoginUserAction(uid) {
     return (dispatch => {
         firebase.firestore()
             .collection("users")
@@ -10,13 +10,26 @@ export function fetchUserDataAction(uid) {
             .then(res => {
                 if (res.exists) {
                     dispatch({
-                        type: USER_STATE_CHANGE, 
+                        type: USER_STATE_CHANGE,
                         currentUser: res.data(),
                         isLogged: true
                     })
-                } else {
-                    console.log("does not exist")
                 }
             })
+    })
+}
+
+
+export function logoutAction() {
+    return (dispatch => {
+        firebase.auth()
+            .signOut()
+            .then(
+                dispatch({
+                    type: USER_STATE_CHANGE,
+                    currentUser: undefined,
+                    isLogged: false
+                })
+            )
     })
 }

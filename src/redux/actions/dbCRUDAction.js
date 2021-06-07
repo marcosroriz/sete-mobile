@@ -72,6 +72,7 @@ export function dbSaveAction(collection, id, payload) {
                 // Despacha para atualizar o estado do app
                 dispatch({
                     type: DB_SAVE_OK,
+                    "lastUpdate": novoLastUpdate,
                     "data": dbSnapshot,
                 })
             })
@@ -91,6 +92,16 @@ export function dbSynchronizeAction() {
         console.log("INIT SYNC")
         // Pegamos o código da cidade para buscar a base dentro do firebase
         let codCidade = getState().userState.currentUser["COD_CIDADE"];
+        let stateLastUpdate = getState().dbState.lastUpdate;
+        let stateDBSnapshot = getState().dbState.data;
+
+        if (lastUpdate == undefined || lastUpdate == null || lastUpdate == '') {
+            lastUpdate = stateLastUpdate;
+        }
+
+        if (dbSnapshot == undefined || dbSnapshot == null || dbSnapshot == {}) {
+            dbSnapshot = stateDBSnapshot;
+        }
 
         // Vamos verificar se precisamos atualizar, para isso olharemos o campo "status"
         // dentro da firebase e checaremos se é equivalente ao que temos aqui (lastUpdate)
@@ -107,12 +118,16 @@ export function dbSynchronizeAction() {
                     if (lastUpdate == lastUpdateServer) {
                         isSynced = true;
                     }
+                    console.log("LASTUPDATE COMPARACAO")
+                    console.log(lastUpdate, lastUpdateServer)
                 }
+
 
                 return isSynced;
             })
             .then((isSynced) => {
                 console.log("BAIXAR DADOS");
+                console.log("VALOR DE IS SINC?", isSynced);
                 if (!isSynced) {
                     // Precisamos atualizar a cópia do nosso firebase
                     // Promessas para buscar dados no firebase

@@ -57,7 +57,8 @@ const Stack = createStackNavigator();
 // App entrypoint
 export class App extends Component {
   render() {
-    const { currentUser, isLogged, dbLastUpdate, finishedOperation } = this.props;
+    const { currentUser, isLogged, dbLastUpdate, dbData, finishedOperation } = this.props;
+    console.log("dbData", dbData)
     console.log("CURRENT USER", currentUser)
     console.log("IS LOGGED", isLogged)
     console.log("LAST UDPATE", dbLastUpdate)
@@ -90,6 +91,7 @@ const mapStateToProps = (store) => ({
   currentUser: store.userState?.currentUser,
   isLogged: store.userState?.isLogged,
   dbLastUpdate: store.dbState?.lastUpdate,
+  dbData: store.dbState?.data,
   finishedOperation: store.dbState?.finishedOperation,
 })
 App = connect(mapStateToProps)(App);

@@ -4,7 +4,7 @@ import React, { Component } from "react"
 // Redux Store
 import { connect } from "react-redux"
 import { bindActionCreators } from "redux"
-import { fetchUser } from "../../redux/actions/index"
+import { finishLoginUserAction } from "../../redux/actions/userActions"
 
 // Secure Store (for credentials)
 import * as SecureStore from 'expo-secure-store';
@@ -59,7 +59,7 @@ export class LoginScreen extends Component {
             .then(async (firebaseUser) => {
                 console.log("LOGIN COM SUCESSO");
                 await SecureStore.setItemAsync('credentials', JSON.stringify({ email, password }));
-                this.props.fetchUser(firebaseUser.user.uid);
+                this.props.finishLoginUserAction(firebaseUser.user.uid);
             })
             .catch((err) => {
                 console.log(err)
@@ -139,6 +139,6 @@ export class LoginScreen extends Component {
     }
 }
 
-const mapDispatchProps = (dispatch) => bindActionCreators({ fetchUser }, dispatch)
+const mapDispatchProps = (dispatch) => bindActionCreators({ finishLoginUserAction }, dispatch)
 
 export default connect(null, mapDispatchProps)(withTheme(LoginScreen))

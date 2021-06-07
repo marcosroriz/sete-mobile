@@ -4,6 +4,7 @@ import React, { Component } from "react"
 // Redux Store
 import { connect } from "react-redux"
 import { bindActionCreators } from "redux"
+import { logoutAction } from "../../redux/actions/userActions"
 import { dbClearAction, dbSynchronizeAction } from "../../redux/actions/dbCRUDAction"
 
 // Widgets
@@ -35,6 +36,11 @@ export class DashboardScreen extends Component {
         this.onSync();
     }
 
+    logout() {
+        console.log("METODO LOGOUTACTION") 
+        this.props.logoutAction();
+    }
+
     onSync() {
         console.log("METODO ON SYNC")
         this.props.dbClearAction();
@@ -49,9 +55,8 @@ export class DashboardScreen extends Component {
     renderCurrentState() {
         const { currentUser, finishedOperation, dbIsSync, dbData, dbLastUpdate } = this.props;
         console.log("FINISHED OPERATION", finishedOperation)
-        // console.log("IS LOGGED", isLogged)
-        // console.log("IS SYNC", dbIsSync)
-        // console.log("LAST UPDATE", dbLastUpdate)
+        console.log("IS SYNC", dbIsSync)
+        console.log("LAST UPDATE", dbLastUpdate)
         // console.log("DATA", dbData)
         // console.log(this.props)
 
@@ -80,6 +85,7 @@ export class DashboardScreen extends Component {
             return (
                 <PaperProvider theme={this.props.theme}>
                     <Appbar.Header style={styles.headerBar}>
+                        <Appbar.BackAction onPress={() => { this.logout() }} />
                         <Appbar.Content
                             title="SETE"
                         />
@@ -88,7 +94,7 @@ export class DashboardScreen extends Component {
                         <ScrollView style={styles.scrollContainer}>
                             <Card>
                                 <Card.Title title={cidade} subtitle={estado}
-                                    right={props => <IconButton {...props} icon="refresh" onPress={() => { }} />}
+                                    right={props => <IconButton {...props} icon="refresh" onPress={() => { this.onSync() }} />}
                                 />
                                 {/* <Card.Content>
                                     <Title
@@ -164,7 +170,8 @@ export class DashboardScreen extends Component {
 const mapDispatchProps = (dispatch) => bindActionCreators(
     {
         dbClearAction: dbClearAction,
-        dbSynchronizeAction: dbSynchronizeAction
+        dbSynchronizeAction: dbSynchronizeAction,
+        logoutAction: logoutAction
     },
     dispatch
 )

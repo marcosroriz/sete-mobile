@@ -23,6 +23,7 @@ export const db = (state = initialState, action) => {
             ...state,
             finishedOperation: true,
             errorOcurred: false,
+            lastUpdate: action.lastUpdate,
             data: action.data
         }
     } else if (action.type == DB_SAVE_ERROR) {
