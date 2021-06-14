@@ -34,7 +34,7 @@ export function dbClearAction() {
 }
 
 // Ação para sincronizar a base de dados dentro do app 
-export function dbSaveAction(collection, id, payload) {
+export function dbSaveAction(saveOperations) {
     return ((dispatch, getState) => {
         // Pegamos o código da cidade para buscar a base dentro do firebase
         let codCidade = getState().userState.currentUser["COD_CIDADE"];
@@ -42,15 +42,20 @@ export function dbSaveAction(collection, id, payload) {
         // Promessas que vamos executar aqui no firebase
         let promisses = new Array();
 
-        // Salvar o dado
-        // Verificar se o objeto que vamos salvar já tem um ID
-        if (id != "" || id != undefined || id != null) {
-            promisses.push(dbAcessarDados(codCidade, collection).doc(id).set(payload))
-        } else {
-            // Não tem ID
-            promisses.push(dbAcessarDados(codCidade, collection).add(payload))
-        }
+        console.log("codCIDADE", codCidade)
 
+        // Processar cada operacao
+        saveOperations.forEach(({ collection, id, payload }) => {
+            console.log("OPERACAO", collection, id, payload)
+            // Salvar o dado
+            // Verificar se o objeto que vamos salvar já tem um ID
+            if (id != "" || id != undefined || id != null) {
+                promisses.push(dbAcessarDados(codCidade, collection).doc(id).set(payload, { merge: true }))
+            } else {
+                // Não tem ID
+                promisses.push(dbAcessarDados(codCidade, collection).add(payload))
+            }
+        })
         // Promessa para atualizar a base
         let novoLastUpdate = new Date().toJSON()
         promisses.push(dbAcessarDados(codCidade, "status").doc("atualizacao").set({ LAST_UPDATE: novoLastUpdate }))
@@ -61,12 +66,28 @@ export function dbSaveAction(collection, id, payload) {
                 // Operação concluída com sucesso
                 lastUpdate = novoLastUpdate;
 
+                console.log("COUNTEDO DA DBSNAPSHOT")
+
                 // Adiciona na nossa base
                 if (dbSnapshot) {
-                    if (id != "" || id != undefined || id != null && dbSnapshot) {
-                        dbSnapshot[collection][id] = payload;
-                        dbSnapshot["status"]["atualizacao"] = { LAST_UPDATE: novoLastUpdate };
-                    }
+                    saveOperations.forEach(({ collection, id, payload }) => {
+                        console.log("--------------------------------------")
+                        console.log("COLLECTION", collection)
+                        console.log("ID", id)
+                        console.log("ANTES")
+                        let dataIndex = dbSnapshot[collection].findIndex(obj => obj.ID == id);
+                        console.log(dbSnapshot[collection][dataIndex])
+                        console.log("-------")
+                        console.log("DEPOIS")
+                        if (id != "" || id != undefined || id != null && dbSnapshot) {
+                            dbSnapshot[collection][dataIndex] = {
+                                ...dbSnapshot[collection][dataIndex],
+                                ...payload
+                            }
+                            console.log(dbSnapshot[collection][dataIndex])
+                            dbSnapshot["status"]["atualizacao"] = { LAST_UPDATE: novoLastUpdate };
+                        }
+                    })
                 }
 
                 // Despacha para atualizar o estado do app
@@ -110,24 +131,25 @@ export function dbSynchronizeAction() {
             .then((resStatus) => {
                 let isSynced = false;
 
-                // Verifica o documento status dentro do firebase
-                if (resStatus.docs.length != 0) {
-                    let lastUpdateServer = resStatus.docs[0].data()["LAST_UPDATE"];
+                // Somente se o snapshot não estiver vazio que fazemos a checagem se está atualizado
+                // Pois se o snapshot está vazio, já sabemos que não está sincronizado (isSynced = false) como descrito
+                if (stateDBSnapshot != undefined && stateDBSnapshot != {} && Object.keys(stateDBSnapshot).length != 0) {
+                    // Verifica o documento status dentro do firebase
+                    if (resStatus.docs.length != 0) {
+                        let lastUpdateServer = resStatus.docs[0].data()["LAST_UPDATE"];
 
-                    // Bate com a última vez que atualizamos?
-                    if (lastUpdate == lastUpdateServer) {
-                        isSynced = true;
+                        // Bate com a última vez que atualizamos?
+                        if (lastUpdate == lastUpdateServer) {
+                            isSynced = true;
+                        }
+                        console.log("LASTUPDATE COMPARACAO")
+                        console.log(lastUpdate, lastUpdateServer)
                     }
-                    console.log("LASTUPDATE COMPARACAO")
-                    console.log(lastUpdate, lastUpdateServer)
                 }
-
 
                 return isSynced;
             })
             .then((isSynced) => {
-                console.log("BAIXAR DADOS");
-                console.log("VALOR DE IS SINC?", isSynced);
                 if (!isSynced) {
                     // Precisamos atualizar a cópia do nosso firebase
                     // Promessas para buscar dados no firebase
@@ -138,7 +160,6 @@ export function dbSynchronizeAction() {
 
                     return Promise.all(syncPromisses);
                 } else {
-                    console.log("JÁ ESTÁ SINCRONIZADO");
                     // Já está sincronizado, não precisamos sincronizar
                     return Promise.reject("ALREADY_SYNC");
                 }
@@ -177,8 +198,6 @@ export function dbSynchronizeAction() {
             })
             .catch((err) => {
                 // Ocorreu um erro ao tentar sincronizar os dados
-                console.error("ERRO AO TENTAR BUSCAR A BASE", err)
-
                 if (err == "ALREADY_SYNC") {
                     // Não precisa sincronizar, já temos o último estado da base
                     dispatch({
