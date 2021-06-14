@@ -18,14 +18,14 @@ export class StatScreen extends Component {
     render() {
         const { currentUser, dbData } = this.props;
         console.log(currentUser);
-        console.log(dbData);
-
+        // console.log(dbData);
         let screenSubTitle = "Visão Geral"
 
         // Pegando dados da base de dados
         // Só considerar num alunos que estão vinculados a escolas
-        let numAlunosAtendidos = dbData.escolatemalunos.length;
+        let numAlunosAtendidos = dbData?.escolatemalunos?.length;
         let numEscolasAtendidas = new Set();
+        
         dbData.escolatemalunos.forEach(k => numEscolasAtendidas.add(k.ID_ESCOLA))
 
         // Número de Rotas

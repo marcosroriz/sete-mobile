@@ -10,18 +10,40 @@ import { Appbar, List, Badge, Card, Colors, Text, TextInput, Divider, Provider a
 import { AlphabetList } from "react-native-section-alphabet-list";
 import { withTheme } from 'react-native-paper';
 
-
-import Icon from 'react-native-vector-icons/FontAwesome';
-
 // Style
 import styles from "./style"
 
 export class OverviewScreen extends Component {
+    state = {
+        // Edit Screen
+        editScreen: "",
+
+        // Screen subtitle
+        screenSubTitle: ""
+    };
+
+    componentDidMount() {
+        const { route } = this.props;
+        const { editScreen, screenSubTitle } = route.params
+
+        this.setState({
+            editScreen,
+            screenSubTitle
+        });
+
+    }
 
     onPressItem = (item) => {
         console.log("LOG", item);
-    };
+        console.log("editScreen", this.state.editScreen);
+        console.log("screenSubTitle", this.state.screenSubTitle);
 
+        this.props.navigation.navigate(this.state.editScreen, {
+            targetData: item,
+            isEditing: true,
+            screenSubTitle: this.state.screenSubTitle,
+        })
+    };
 
     renderListItem = (item) => {
         return (
@@ -55,8 +77,8 @@ export class OverviewScreen extends Component {
 
     render() {
         const { navigation, route, dbData } = this.props;
-        console.log(dbData)
-        const {screenSubTitle, targetData, targetDesc, keyID, keyValue } = route.params
+        // console.log(dbData)
+        const { screenSubTitle, targetData, targetDesc, keyID, keyValue } = route.params
 
         const listData = dbData[targetData].map(d => {
             let listName = d[keyValue].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -93,7 +115,7 @@ export class OverviewScreen extends Component {
                         getItemHeight={() => 60}
                         sectionHeaderHeight={30}
                         listHeaderHeight={80}
-                        // removeClippedSubviews={true}
+                    // removeClippedSubviews={true}
                     />
 
                 </View>

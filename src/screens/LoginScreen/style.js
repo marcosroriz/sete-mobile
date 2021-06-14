@@ -33,12 +33,12 @@ export default StyleSheet.create({
     rodapeContainer: {
         flex: 1,
         justifyContent: 'flex-end',
-        overflow: "hidden"
+        overflow: "hidden",
     },
     logoRodape: {
-        width: width,
+        width: width/1.1,
         height: 65,
-        marginBottom: 10,
+        marginBottom: 5,
         resizeMode: 'contain',
     },
 });

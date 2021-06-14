@@ -34,10 +34,21 @@ export class DashboardScreen extends Component {
         console.log("VALOR DE FINISHED OPERATION", this.props.finishedOperation)
         console.log("VALOR DE DBSYNC", this.props.dbIsSync)
         this.onSync();
+
+        this.focusListener = this.props.navigation.addListener("focus", () => {
+            console.log("CHAMANDO AQUI?")
+            this.onSync();
+        });
     }
 
+    componentWillUnmount() {
+        // remove event listener
+        this.focusListener();
+    }
+
+
     logout() {
-        console.log("METODO LOGOUTACTION") 
+        console.log("METODO LOGOUTACTION")
         this.props.logoutAction();
     }
 
@@ -53,11 +64,12 @@ export class DashboardScreen extends Component {
 
 
     renderCurrentState() {
-        const { currentUser, finishedOperation, dbIsSync, dbData, dbLastUpdate } = this.props;
+        const { currentUser, finishedOperation, dbIsSync, dbLastUpdate } = this.props;
+        console.log("-----------------------------------------------")
         console.log("FINISHED OPERATION", finishedOperation)
         console.log("IS SYNC", dbIsSync)
         console.log("LAST UPDATE", dbLastUpdate)
-        // console.log("DATA", dbData)
+        // // console.log("DATA", dbData)
         // console.log(this.props)
 
         let cidade = currentUser?.CIDADE;
@@ -77,8 +89,6 @@ export class DashboardScreen extends Component {
                         {cidade}
                     </Text>
                     <Divider />
-
-
                 </View>
             )
         } else {
@@ -123,10 +133,11 @@ export class DashboardScreen extends Component {
                                             keyID: "ID",
                                             keyValue: "NOME",
                                             targetDesc: "Alunos atendidos",
-                                            screenSubTitle: "Alunos"
+                                            screenSubTitle: "Alunos",
+                                            editScreen: "EditAlunoScreen"
                                         })}
                                     />
-                                    {/* <List.Item title="Mapa de Alunos" /> */}
+                                    <List.Item title="Mapa de Alunos" />
                                 </List.Accordion>
 
                                 <List.Accordion
@@ -139,7 +150,8 @@ export class DashboardScreen extends Component {
                                             keyID: "ID",
                                             keyValue: "NOME",
                                             targetDesc: "Escolas atendidas",
-                                            screenSubTitle: "Escolas"
+                                            screenSubTitle: "Escolas",
+                                            editScreen: "InfoEscolaScreen"
                                         })} />
                                     <List.Item title="Mapa de Escolas Atendidas" />
                                 </List.Accordion>
@@ -160,9 +172,8 @@ export class DashboardScreen extends Component {
     }
 
     render() {
-        return (
-            this.renderCurrentState()
-        )
+        console.log("ESTÁ AQUI NO RENDER DASHBOARD??")
+        return this.renderCurrentState()
     }
 
 }

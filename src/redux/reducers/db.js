@@ -12,6 +12,7 @@ const initialState = {
 }
 
 export const db = (state = initialState, action) => {
+    console.log(action.type)
     if (action.type == DB_CLEAR) {
         return {
             ...state,

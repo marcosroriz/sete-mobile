@@ -6,6 +6,7 @@ const initialState = {
 }
 
 export const user = (state = initialState, action) => {
+    console.log(action.type)
     if (action.type == USER_STATE_CHANGE) {
         return {
             ...state,

@@ -21,6 +21,8 @@ import styles from "./style"
 // Firebase
 import firebase from "firebase";
 
+// Location
+import * as Location from 'expo-location';
 
 // LoginScreen
 export class LoginScreen extends Component {
@@ -30,7 +32,8 @@ export class LoginScreen extends Component {
         this.state = {
             email: '',
             password: '',
-            authenticating: false
+            authenticating: false,
+            locationError: true,
         }
 
         this.onPressSignIn = this.onPressSignIn.bind(this);
@@ -44,6 +47,12 @@ export class LoginScreen extends Component {
                 email: credentials.email,
                 password: credentials.password
             });
+        }
+
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        console.log("LOCATION STATUS", status);
+        if (status !== 'granted') {
+            this.setState({ locationError: false });
         }
     }
 
@@ -125,7 +134,7 @@ export class LoginScreen extends Component {
                     <View style={styles.rodapeContainer}>
                         <Image
                             style={styles.logoRodape}
-                            source={require("../../../assets/banner-rodape.png")} />
+                            source={require("../../../assets/banner-rodape-completo.png")} />
                     </View>
                 </KeyboardAvoidingView >
             )

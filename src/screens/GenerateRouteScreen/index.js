@@ -33,6 +33,7 @@ const iconeBarco = require("../../../assets/barco.png");
 import MapView, { Geojson, Marker } from "react-native-maps";
 
 // GPS
+import * as Location from 'expo-location';
 import { length, projection } from '@turf/turf';
 import createGpx from "gps-to-gpx";
 import simplify from "simplify-geojson";
@@ -86,6 +87,8 @@ class GenerateRouteScreen extends Component {
 
     componentDidMount() {
         this.props.dbClearAction();
+
+        Location.installWebGeolocationPolyfill()
 
         navigator.geolocation.getCurrentPosition(
             (params) => {
@@ -218,8 +221,14 @@ class GenerateRouteScreen extends Component {
                 geoJSON
             });
 
-            this.props.dbSaveAction("rotas", this.state.nomeRota, payloadRota);
-            this.handleExportRoutePress();
+            this.props.dbSaveAction([
+                {
+                    operation: "rotas",
+                    id: this.state.nomeRota,
+                    payload: payloadRota
+                }
+            ]);
+            await this.handleExportRoutePress();
             this.onStepPress(2);
         }
     }
@@ -322,7 +331,7 @@ class GenerateRouteScreen extends Component {
             <PaperProvider theme={this.props.theme}>
                 <Appbar.Header style={styles.headerBar}>
                     <Appbar.BackAction
-                        onPress={() => this.props.navigation.goBack()}
+                        onPress={() => this.props.navigation.push("DashboardScreen")}
                     />
                     <Appbar.Content
                         title="SETE"
@@ -389,7 +398,7 @@ class GenerateRouteScreen extends Component {
                     <View style={styles.inputWrapper}>
                         <Text style={styles.labelPicker}>
                             Selecione o tipo da rota:
-                                   </Text>
+                        </Text>
                         <RadioButton.Group
                             onValueChange={value => this.setState({ tipoRota: value })}
                             value={this.state.tipoRota}
@@ -420,7 +429,7 @@ class GenerateRouteScreen extends Component {
                     <View style={styles.inputWrapper}>
                         <Text style={styles.labelPicker}>
                             Marque o horário de funcionamento:
-                                   </Text>
+                        </Text>
                         <Checkbox.Item
                             mode="android"
                             label="Manhã"
@@ -539,8 +548,7 @@ class GenerateRouteScreen extends Component {
                     </Text>
                     <Text style={styles.infoText}>
                         Enviando os dados da rota para o sistema SETE
-                     </Text>
-
+                    </Text>
                 </View>
             )
         } else {
@@ -563,7 +571,7 @@ class GenerateRouteScreen extends Component {
                             mode="contained"
                             onPress={() => Sharing.shareAsync(this.state.gpxFile)}>
                             Salvar o arquivo da rota
-                    </Button>
+                        </Button>
                     </View>
                 )
             } else {
@@ -581,7 +589,7 @@ class GenerateRouteScreen extends Component {
                             mode="contained"
                             onPress={() => this.props.navigation.goBack()}>
                             Retornar ao painel
-                    </Button>
+                        </Button>
                     </View>
                 )
             }
