@@ -1,10 +1,22 @@
 // Basic Imports
-import React, { Component } from 'react'
+import React, { Component } from 'react';
+import { LogBox } from 'react-native';
+
+// Localization
+import { datePolyfill } from "./src/utils/DatePolyfill";
+datePolyfill();
 
 // Store
 import { Provider as StoreProvider, connect } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor } from './src/store/Store';
+
+// (async() => {
+//   await persistor.purge();
+//   await persistor.flush();
+//   await persistor.persist();
+//     console.log("terminou purge")
+// })();
 
 // Firebase
 import * as firebase from "firebase";
@@ -14,6 +26,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 
 // Screens
+import EditAlunoScreen from "./src/screens/EditAlunoScreen";
 import GenerateRouteScreen from "./src/screens/GenerateRouteScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import DashboardScreen from "./src/screens/DashboardScreen";
@@ -33,6 +46,7 @@ const theme = {
   },
 };
 
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDOHCjGDkv-tsIjVhHxOcEt0rzusFJwQxc",
   authDomain: "softwareter.firebaseapp.com",
@@ -52,17 +66,17 @@ firebase.auth().signOut()
 const Stack = createStackNavigator();
 
 // Remove warnings
-
+LogBox.ignoreLogs(['Setting a timer'])
 
 // App entrypoint
 export class App extends Component {
   render() {
     const { currentUser, isLogged, dbLastUpdate, dbData, finishedOperation } = this.props;
-    console.log("dbData", dbData)
-    console.log("CURRENT USER", currentUser)
-    console.log("IS LOGGED", isLogged)
-    console.log("LAST UDPATE", dbLastUpdate)
-    console.log("Finished Operation", finishedOperation)
+    // console.log("dbData", dbData)
+    // console.log("CURRENT USER", currentUser)
+    // console.log("IS LOGGED", isLogged)
+    // console.log("LAST UDPATE", dbLastUpdate)
+    // console.log("Finished Operation", finishedOperation)
 
     return (
       <PaperProvider theme={theme}>
@@ -74,6 +88,7 @@ export class App extends Component {
                 <Stack.Screen name="GenerateRouteScreen" component={GenerateRouteScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="OverviewScreen" component={OverviewScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="StatScreen" component={StatScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="EditAlunoScreen" component={EditAlunoScreen} options={{ headerShown: false }} />
               </Stack.Navigator>
             ) : (
               <Stack.Navigator initialRouteName="LoginScreen">

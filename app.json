@@ -17,19 +17,31 @@
       "**/*"
     ],
     "ios": {
-	  "bundleIdentifier": "br.ufg.transportes.cecate.sete",
+      "bundleIdentifier": "br.ufg.transportes.cecate.sete",
       "buildNumber": "1.0.0",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "location"
+        ],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "SETE requer a utilização do GPS para poder traçar e georeferenciar sua posição."
+      }
     },
     "android": {
-	  "package": "br.ufg.transportes.cecate.sete",
+      "package": "br.ufg.transportes.cecate.sete",
       "versionCode": 1,
+      "useNextNotificationsApi": true,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE"
+      ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#FFFFFF"
       }
     },
-
     "web": {
       "favicon": "./assets/favicon.png"
     }
