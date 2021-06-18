@@ -26,11 +26,13 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 
 // Screens
+import AlunosMapScreen from './src/screens/AlunosMapScreen';
 import EditAlunoScreen from "./src/screens/EditAlunoScreen";
 import GenerateRouteScreen from "./src/screens/GenerateRouteScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import OverviewScreen from "./src/screens/OverviewScreen";
+import RotasPercorrerScreen from "./src/screens/RotasPercorrerScreen";
 import StatScreen from "./src/screens/StatScreen";
 
 // Theme
@@ -85,9 +87,11 @@ export class App extends Component {
             isLogged ? (
               <Stack.Navigator initialRouteName="DashboardScreen">
                 <Stack.Screen name="DashboardScreen" component={DashboardScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="AlunosMapScreen" component={AlunosMapScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="GenerateRouteScreen" component={GenerateRouteScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="OverviewScreen" component={OverviewScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="StatScreen" component={StatScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="RotasPercorrerScreen" component={RotasPercorrerScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="EditAlunoScreen" component={EditAlunoScreen} options={{ headerShown: false }} />
               </Stack.Navigator>
             ) : (

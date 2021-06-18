@@ -65,17 +65,17 @@ export class DashboardScreen extends Component {
 
     renderCurrentState() {
         const { currentUser, finishedOperation, dbIsSync, dbLastUpdate } = this.props;
-        console.log("-----------------------------------------------")
-        console.log("FINISHED OPERATION", finishedOperation)
-        console.log("IS SYNC", dbIsSync)
-        console.log("LAST UPDATE", dbLastUpdate)
-        // // console.log("DATA", dbData)
-        // console.log(this.props)
+        // console.log("-----------------------------------------------")
+        // console.log("FINISHED OPERATION", finishedOperation)
+        // console.log("IS SYNC", dbIsSync)
+        // console.log("LAST UPDATE", dbLastUpdate)
+        // // // console.log("DATA", dbData)
+        // // console.log(this.props)
 
         let cidade = currentUser?.CIDADE;
         let estado = currentUser?.ESTADO;
-        console.log("CIDADE", cidade)
-        console.log("ESTADO", cidade)
+        // console.log("CIDADE", cidade)
+        // console.log("ESTADO", cidade)
 
         if (!finishedOperation) {
             return (
@@ -137,7 +137,10 @@ export class DashboardScreen extends Component {
                                             editScreen: "EditAlunoScreen"
                                         })}
                                     />
-                                    <List.Item title="Mapa de Alunos" />
+                                    <List.Item
+                                        title="Mapa de Alunos"
+                                        onPress={() => this.props.navigation.navigate("AlunosMapScreen")}
+                                    />
                                 </List.Accordion>
 
                                 <List.Accordion
@@ -162,6 +165,9 @@ export class DashboardScreen extends Component {
                                         title="Gerar rota usando o GPS"
                                         onPress={() => this.props.navigation.navigate("GenerateRouteScreen")} />
                                     <List.Item title="Mapa de Escolas Atendidas" />
+                                    <List.Item
+                                        title="Percorrer rota"
+                                        onPress={() => this.props.navigation.navigate("RotasPercorrerScreen")} />
                                 </List.Accordion>
                             </List.Section>
                         </ScrollView>

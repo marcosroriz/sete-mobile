@@ -113,6 +113,10 @@ class GenerateRouteScreen extends Component {
         );
     }
 
+    componentWillUnmount() {
+        navigator.geolocation.clearWatch(this.state.watch_id);
+    }
+
     handleRecordRoutePress() {
         this.setState({
             walkedCoordsGps: [],

@@ -11,7 +11,7 @@ export function locationStartTracking() {
 
         dispatch({
             type: LOCATION_TRACK_START,
-            data: locationTrackData,
+            data: [],
             locationTrackStatus
         })
     })
@@ -24,12 +24,15 @@ export function locationUpdatePosition(locations) {
             "latitude": loc.latitude,
             "longitude": loc.longitude
         }))
+        
+        let newLocations = [...locationTrackData];
         locationTrackStatus = LOCATION_TRACK_UPDATE;
+
         console.log("LOCATION DEPOIS", locationTrackData.length)
-        console.log("NOVA VERSAO DO LOCATIONS", locationTrackData)
+        console.log("NOVA VERSAO DO LOCATIONS", newLocations)
         dispatch({
             type: LOCATION_TRACK_UPDATE,
-            data: locationTrackData,
+            data: newLocations,
             locationTrackStatus
         })
     })

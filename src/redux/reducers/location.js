@@ -8,19 +8,24 @@ const initialState = {
 export const location = (state = initialState, action) => {
     console.log(action.type)
     if (action.type == LOCATION_TRACK_START) {
+        console.log("START", state)
+        console.log("START", action)
         return {
             ...state,
             locationTrackData: [],
             locationTrackStatus: LOCATION_TRACK_START
         }
     } else if (action.type == LOCATION_TRACK_UPDATE) {
-        console.log("DATA size", action.data.length)
+        console.log("UPDATE", state)
+        console.log("UPDATE", action)
         return {
             ...state,
-            locationTrackData: action.data,
+            locationTrackData: [...action.data],
             locationTrackStatus: LOCATION_TRACK_UPDATE
         }
     } else if (action.type == LOCATION_TRACK_END) {
+        console.log("END", state)
+        console.log("END", action)
         return {
             ...state,
             locationTrackData: action.data,
