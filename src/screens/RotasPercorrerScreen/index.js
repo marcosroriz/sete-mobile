@@ -47,6 +47,7 @@ export class RotasPercorrerScreen extends React.Component {
     };
 
     componentDidMount() {
+        this.props.dbData.rotas.forEach(r => console.log(r.NOME, Object.keys(r)))
         this.props.dbClearAction();
         this.props.locationStartTracking();
     }
@@ -196,6 +197,7 @@ const mapStateToProps = (store) => ({
     locationTrackData: store.locState.locationTrackData,
     finishedOperation: store.dbState.finishedOperation,
     errorOcurred: store.dbState.errorOcurred,
+    dbData: store.dbState.data
 })
 
 export default connect(mapStateToProps, mapDispatchProps)(withTheme(RotasPercorrerScreen))
