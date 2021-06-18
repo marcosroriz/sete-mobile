@@ -13,8 +13,6 @@ import { Appbar, List, Text, Divider, Provider as PaperProvider } from 'react-na
 import { withTheme } from 'react-native-paper';
 import { ActivityIndicator, Avatar, Button, Card, Colors, Headline, IconButton, Title, Paragraph } from 'react-native-paper';
 
-const RightContent = props => <Avatar.Icon {...props} icon="folder" />
-
 // Style
 import styles from "./style"
 
@@ -106,13 +104,6 @@ export class DashboardScreen extends Component {
                                 <Card.Title title={cidade} subtitle={estado}
                                     right={props => <IconButton {...props} icon="refresh" onPress={() => { this.onSync() }} />}
                                 />
-                                {/* <Card.Content>
-                                    <Title
-                                        left={props => <Avatar.Icon {...props} icon="folder" />}
-                                        right={(props) => <IconButton {...props} icon="more-vert" onPress={() => { }} />}
-                                    >{cidade}</Title>
-                                    <Paragraph>{estado}</Paragraph>
-                                </Card.Content> */}
                             </Card>
 
                             <List.Section title="Funcionalidades">
@@ -124,10 +115,8 @@ export class DashboardScreen extends Component {
                                 <List.Accordion
                                     title="Alunos"
                                     left={props => <List.Icon {...props} icon="face" />}>
-                                    {/* <List.Item title="Cadastrar Aluno" />     */}
                                     <List.Item
                                         title="Lista de Alunos Atendidos"
-                                        // onPress={() => this.onSync()}
                                         onPress={() => this.props.navigation.navigate("OverviewScreen", {
                                             targetData: "alunos",
                                             keyID: "ID",

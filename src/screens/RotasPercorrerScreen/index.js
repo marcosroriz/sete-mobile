@@ -57,8 +57,8 @@ export class RotasPercorrerScreen extends React.Component {
 
     onPress = async () => {
         console.log("FORE", await Location.requestForegroundPermissionsAsync());
-        console.log("FORE", await Location.requestBackgroundPermissionsAsync());
-        let k = await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        console.log("BACK", await Location.requestBackgroundPermissionsAsync());
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
             accuracy: Location.Accuracy.Highest,
             timeInterval: 1000,
             showsBackgroundLocationIndicator: true,
@@ -68,17 +68,13 @@ export class RotasPercorrerScreen extends React.Component {
                 notificationColor: '#FF7B00',
             }
         })
-
-        console.log("aqui")
     };
 
     render() {
         const { locationTrackData } = this.props;
         const { region, camera } = this.state;
 
-        console.log("------------------------------------------------")
-        console.log("RENDER")
-        console.log(locationTrackData)
+        console.log("LOCATION TRACK SIZE", locationTrackData?.length)
         let reg = region;
         let lastLat = reg.latitude;
         let lastLon = reg.longitude;
@@ -89,7 +85,7 @@ export class RotasPercorrerScreen extends React.Component {
         }
 
         let novaCamera = { ...camera, ...{ center: { latitude: lastLat, longitude: lastLon } } }
-        console.log("NOVA", novaCamera)
+
         return (
             <PaperProvider>
                 <Appbar.Header style={styles.headerBar}>
@@ -119,8 +115,6 @@ export class RotasPercorrerScreen extends React.Component {
                             if (cam.zoom == null || cam.zoom == undefined) {
                                 cam.zoom = 15;
                             }
-
-                            console.log("SETANDO CAM", cam)
 
                             if (cam.center.latitude != camera.center.latitude ||
                                 cam.center.longitude != camera.center.longitude ||
@@ -176,7 +170,7 @@ export class RotasPercorrerScreen extends React.Component {
 }
 
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
-    console.log("DAta", data)
+    console.log("DATA", data)
     console.log("Error", error)
     if (error) {
         // Error occurred - check `error.message` for more details.
