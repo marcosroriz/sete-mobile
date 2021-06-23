@@ -156,7 +156,15 @@ export class DashboardScreen extends Component {
                                     <List.Item title="Mapa de Escolas Atendidas" />
                                     <List.Item
                                         title="Percorrer rota"
-                                        onPress={() => this.props.navigation.navigate("RotasPercorrerScreen")} />
+                                        onPress={() => this.props.navigation.navigate("OverviewScreen", {
+                                            targetData: "rotas",
+                                            keyID: "ID",
+                                            keyValue: "NOME",
+                                            targetDesc: "Rotas Cadastradas",
+                                            screenSubTitle: "",
+                                            editScreen: "RotasPercorrerScreen"
+                                        })} 
+                                    />
                                 </List.Accordion>
                             </List.Section>
                         </ScrollView>

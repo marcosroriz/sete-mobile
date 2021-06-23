@@ -33,6 +33,7 @@ import LoginScreen from "./src/screens/LoginScreen";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import OverviewScreen from "./src/screens/OverviewScreen";
 import RotasPercorrerScreen from "./src/screens/RotasPercorrerScreen";
+import RotasPercorrerDashboardScreen from "./src/screens/RotasPercorrerDashboardScreen";
 import StatScreen from "./src/screens/StatScreen";
 
 // Theme
@@ -92,6 +93,7 @@ export class App extends Component {
                 <Stack.Screen name="OverviewScreen" component={OverviewScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="StatScreen" component={StatScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="RotasPercorrerScreen" component={RotasPercorrerScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="RotasPercorrerDashboardScreen" component={RotasPercorrerDashboardScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="EditAlunoScreen" component={EditAlunoScreen} options={{ headerShown: false }} />
               </Stack.Navigator>
             ) : (
