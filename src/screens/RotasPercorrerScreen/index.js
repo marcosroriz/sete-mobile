@@ -56,26 +56,19 @@ import MapView, {
 // Style
 import styles from "./style";
 
+// Components
 import FormView from "../../components/FormView";
+
+// Helpers
+import * as turf from "@turf/turf";
+import { LineHelper } from "../../helpers/LineHelper";
 
 const LOCATION_TASK_NAME = "background-location-task";
 
 export class RotasPercorrerScreen extends React.Component {
+    acuracy = 0.001;
+    geojsonRouteObj = {};
     state = {
-        region: {
-            latitude: -16.6782432,
-            longitude: -49.2530005,
-            latitudeDelta: 0.00922,
-            longitudeDelta: 0.00421,
-        },
-
-        camera: {
-            center: { latitude: -16.6782432, longitude: -49.2530005 },
-            pitch: 90,
-            heading: 20,
-            zoom: 20,
-            altitude: 300,
-        },
         problemsModalIsOpened: false,
         hasStartedRoute: false,
         buttonGroupIsOppened: false,
@@ -103,6 +96,12 @@ export class RotasPercorrerScreen extends React.Component {
 
     async componentDidMount() {
         try {
+            // Rota a ser percorrida colocada em um estado
+            const { targetData } = this.props.route.params;
+            this.geojsonRouteObj = turf.toWgs84(
+                JSON.parse(targetData["SHAPE"])
+            );
+
             this.props.dbClearAction();
             this.props.locationStartTracking();
             console.log(
@@ -127,7 +126,13 @@ export class RotasPercorrerScreen extends React.Component {
                 altitude: altitude,
             });
         } catch (err) {
-            Alert.alert("Atenção!", err.toString());
+            Alert.alert("Atenção!", err.toString(), [
+                {
+                    text: "OK!",
+                    onPress: () => this.props.navigation.goBack(),
+                    style: "cancel",
+                },
+            ]);
         }
     }
 
@@ -139,13 +144,48 @@ export class RotasPercorrerScreen extends React.Component {
         const { locationTrackData } = this.props;
 
         if (prevProps.locationTrackData !== locationTrackData) {
-            let locationLength = locationTrackData?.length;
-            if (locationLength > 0) {
-                let i = locationLength - 1;
+            const [lastItemGeojsonLatitude, lastItemGeojsonLongitude] =
+                this.getGeojsonLastLatLng();
+
+            let userRouteLength = locationTrackData?.length;
+            if (userRouteLength > 0) {
+                let i = userRouteLength - 1;
+                const lastItemLatitude = locationTrackData[i].latitude;
+                const lastItemLongitude = locationTrackData[i].longitude;
+
                 this.animateCamera(locationTrackData[i]);
+                if (
+                    LineHelper.checkIfInAccuracyRange({
+                        comparedValue: lastItemLatitude,
+                        baseValue: lastItemGeojsonLatitude,
+                        accuracy: this.accuracy,
+                    }) &&
+                    LineHelper.checkIfInAccuracyRange({
+                        comparedValue: lastItemLongitude,
+                        baseValue: lastItemGeojsonLongitude,
+                        accuracy: this.accuracy,
+                    })
+                ) {
+                    this.stopRouteFollow();
+                }
             }
-            console.log("aqui");
         }
+    }
+
+    getGeojsonLastLatLng() {
+        const featuresLength = this.geojsonRouteObj.features.length - 1;
+        const geojsonLength =
+            this.geojsonRouteObj.features[featuresLength].geometry.coordinates
+                .length - 1;
+
+        return [
+            this.geojsonRouteObj.features[featuresLength].geometry.coordinates[
+                geojsonLength
+            ][0],
+            this.geojsonRouteObj.features[featuresLength].geometry.coordinates[
+                geojsonLength
+            ][1],
+        ];
     }
 
     openModal() {
@@ -200,20 +240,13 @@ export class RotasPercorrerScreen extends React.Component {
 
     render() {
         const { locationTrackData, route } = this.props;
-        const {
-            region,
-            camera,
-            buttonGroupIsOppened,
-            hasStartedRoute,
-            problemsModalIsOpened,
-        } = this.state;
+        const { buttonGroupIsOppened, hasStartedRoute, problemsModalIsOpened } =
+            this.state;
         const { targetData } = route.params;
 
-        console.log("LOCATION TRACK SIZE", locationTrackData?.length);
+        let lastLat;
+        let lastLon;
         let locationLength = locationTrackData?.length;
-        let reg = region;
-        let lastLat = reg.latitude;
-        let lastLon = reg.longitude;
         if (locationLength > 0) {
             let i = locationLength - 1;
             lastLat = locationTrackData[i].latitude;
@@ -251,7 +284,7 @@ export class RotasPercorrerScreen extends React.Component {
                         showsScale
                     >
                         <Geojson
-                            geojson={JSON.parse(targetData["SHAPE"])}
+                            geojson={this.geojsonRouteObj}
                             strokeColor="orange"
                             fillColor="white"
                             strokeWidth={5}
@@ -261,7 +294,6 @@ export class RotasPercorrerScreen extends React.Component {
                             strokeColor="#a83291"
                             strokeWidth={10}
                         />
-
                         {locationTrackData.length > 0 ? (
                             <Marker
                                 coordinate={{
