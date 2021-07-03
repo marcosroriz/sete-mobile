@@ -63,11 +63,18 @@ import FormView from "../../components/FormView";
 import * as turf from "@turf/turf";
 import { LineHelper } from "../../helpers/LineHelper";
 
+// const iconeOnibus = require("../../../assets/onibus.png");
+// const iconeBarco = require("../../../assets/barco.png");
+import iconeOnibus from "../../../assets/onibus.png";
+import iconeBarco from "../../../assets/barco.png";
+
 const LOCATION_TASK_NAME = "background-location-task";
 
 export class RotasPercorrerScreen extends React.Component {
     acuracy = 0.001;
     geojsonRouteObj = {};
+    routeIcon = iconeOnibus;
+    hasBackgroundPermission = true;
     state = {
         problemsModalIsOpened: false,
         hasStartedRoute: false,
@@ -98,20 +105,26 @@ export class RotasPercorrerScreen extends React.Component {
         try {
             // Rota a ser percorrida colocada em um estado
             const { targetData } = this.props.route.params;
+            this.routeIcon =
+                targetData["TIPO"] === "1" ? iconeOnibus : iconeBarco;
             this.geojsonRouteObj = turf.toWgs84(
                 JSON.parse(targetData["SHAPE"])
             );
-
-            this.props.dbClearAction();
+            if (targetData) this.props.dbClearAction();
             this.props.locationStartTracking();
-            console.log(
-                "FORE",
-                await Location.requestForegroundPermissionsAsync()
-            );
-            console.log(
-                "BACK",
-                await Location.requestBackgroundPermissionsAsync()
-            );
+
+            //PERMISSION
+            const foregroundPermission =
+                await Location.requestForegroundPermissionsAsync();
+            const backgroundPermission =
+                await Location.requestBackgroundPermissionsAsync();
+            if (!backgroundPermission.granted) {
+                this.hasBackgroundPermission = false;
+                if (!foregroundPermission.granted) {
+                    throw "Para usar essa funcionalidade, é necessário liberar o acesso ao GPS!";
+                }
+            }
+
             const {
                 coords: { latitude, longitude, altitude, heading },
             } = await Location.getCurrentPositionAsync({
@@ -146,7 +159,6 @@ export class RotasPercorrerScreen extends React.Component {
         if (prevProps.locationTrackData !== locationTrackData) {
             const [lastItemGeojsonLatitude, lastItemGeojsonLongitude] =
                 this.getGeojsonLastLatLng();
-
             let userRouteLength = locationTrackData?.length;
             if (userRouteLength > 0) {
                 let i = userRouteLength - 1;
@@ -194,16 +206,29 @@ export class RotasPercorrerScreen extends React.Component {
 
     async startRouteFollow() {
         try {
-            await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-                accuracy: Location.Accuracy.Highest,
-                timeInterval: 1000,
-                showsBackgroundLocationIndicator: true,
-                foregroundService: {
-                    notificationTitle: "SETE Rota",
-                    notificationBody: "Georeferenciando...",
-                    notificationColor: "#FF7B00",
-                },
-            });
+            if (this.hasBackgroundPermission) {
+                await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+                    accuracy: Location.Accuracy.Highest,
+                    timeInterval: 1000,
+                    showsBackgroundLocationIndicator: true,
+                    foregroundService: {
+                        notificationTitle: "SETE Rota",
+                        notificationBody: "Georeferenciando...",
+                        notificationColor: "#FF7B00",
+                    },
+                });
+            } else {
+                await Location.watchPositionAsync(
+                    {
+                        accuracy: Location.Accuracy.Highest,
+                        timeInterval: 1000,
+                        distanceInterval: 1,
+                    },
+                    ({ coords }) => {
+                        store.dispatch(locationUpdatePosition(coords));
+                    }
+                );
+            }
             this.setState({ hasStartedRoute: true });
         } catch (err) {
             Alert.alert("Atenção!", err.toString());
@@ -300,7 +325,13 @@ export class RotasPercorrerScreen extends React.Component {
                                     latitude: lastLat,
                                     longitude: lastLon,
                                 }}
-                            />
+                            >
+                                <Image
+                                    source={this.routeIcon}
+                                    style={{ width: 36, height: 36 }}
+                                    resizeMode="contain"
+                                />
+                            </Marker>
                         ) : null}
                     </MapView>
                     <Modal
