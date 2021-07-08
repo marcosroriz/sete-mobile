@@ -14,44 +14,17 @@ import {
 import { store } from "../../store/Store";
 
 // Widgets
+import { Image, View, Modal, StatusBar, Text, Alert } from "react-native";
 import {
-    Animated,
-    Easing,
-    Image,
-    View,
-    Modal,
-    StatusBar,
-    Text,
-    Alert,
-} from "react-native";
-import {
-    Avatar,
-    ActivityIndicator,
     Appbar,
-    Button,
-    Card,
-    Chip,
-    Colors,
-    DataTable,
-    Divider,
     FAB,
-    IconButton,
-    List,
     RadioButton,
     TextInput,
-    Title,
-    Paragraph,
     Provider as PaperProvider,
 } from "react-native-paper";
 import { withTheme } from "react-native-paper";
 
-import MapView, {
-    Callout,
-    CalloutSubview,
-    Geojson,
-    Marker,
-    Polyline,
-} from "react-native-maps";
+import MapView, { Geojson, Marker, Polyline } from "react-native-maps";
 
 // Style
 import styles from "./style";
@@ -63,19 +36,20 @@ import FormView from "../../components/FormView";
 import * as turf from "@turf/turf";
 import { LineHelper } from "../../helpers/LineHelper";
 
-// const iconeOnibus = require("../../../assets/onibus.png");
-// const iconeBarco = require("../../../assets/barco.png");
 import iconeOnibus from "../../../assets/onibus.png";
 import iconeBarco from "../../../assets/barco.png";
 
 const LOCATION_TASK_NAME = "background-location-task";
 
 export class RotasPercorrerScreen extends React.Component {
-    acuracy = 0.001;
-    geojsonRouteObj = {};
+    accuracy = 0.001;
+    routeLastPosition = [];
+    geojsonRoute = {};
     routeIcon = iconeOnibus;
     hasBackgroundPermission = true;
+    clearWatchPosition;
     state = {
+        routeCoords: [],
         problemsModalIsOpened: false,
         hasStartedRoute: false,
         buttonGroupIsOppened: false,
@@ -104,14 +78,15 @@ export class RotasPercorrerScreen extends React.Component {
     async componentDidMount() {
         try {
             // Rota a ser percorrida colocada em um estado
+            if (targetData) this.props.dbClearAction();
+            this.props.locationStartTracking();
+
             const { targetData } = this.props.route.params;
             this.routeIcon =
                 targetData["TIPO"] === "1" ? iconeOnibus : iconeBarco;
-            this.geojsonRouteObj = turf.toWgs84(
-                JSON.parse(targetData["SHAPE"])
-            );
-            if (targetData) this.props.dbClearAction();
-            this.props.locationStartTracking();
+            this.geojsonRoute = turf.toWgs84(JSON.parse(targetData["SHAPE"]));
+            this.lastRoutePosition = this.getGeojsonLastLatLng();
+            this.setState({ routeCoords: [...this.getGeojsonCoords()] });
 
             //PERMISSION
             const foregroundPermission =
@@ -150,54 +125,139 @@ export class RotasPercorrerScreen extends React.Component {
     }
 
     async componentWillUnmount() {
-        await TaskManager.unregisterTaskAsync(LOCATION_TASK_NAME);
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        const { locationTrackData } = this.props;
-
-        if (prevProps.locationTrackData !== locationTrackData) {
-            const [lastItemGeojsonLatitude, lastItemGeojsonLongitude] =
-                this.getGeojsonLastLatLng();
-            let userRouteLength = locationTrackData?.length;
-            if (userRouteLength > 0) {
-                let i = userRouteLength - 1;
-                const lastItemLatitude = locationTrackData[i].latitude;
-                const lastItemLongitude = locationTrackData[i].longitude;
-
-                this.animateCamera(locationTrackData[i]);
-                if (
-                    LineHelper.checkIfInAccuracyRange({
-                        comparedValue: lastItemLatitude,
-                        baseValue: lastItemGeojsonLatitude,
-                        accuracy: this.accuracy,
-                    }) &&
-                    LineHelper.checkIfInAccuracyRange({
-                        comparedValue: lastItemLongitude,
-                        baseValue: lastItemGeojsonLongitude,
-                        accuracy: this.accuracy,
-                    })
-                ) {
-                    this.stopRouteFollow();
-                }
-            }
+        if (this.hasBackgroundPermission) {
+            await TaskManager.unregisterAllTasksAsync(LOCATION_TASK_NAME);
+        } else {
+            await this.clearWatchPosition.remove();
         }
     }
 
+    async componentDidUpdate(prevProps, prevState) {
+        try {
+            const { locationTrackData } = this.props;
+
+            if (prevProps.locationTrackData !== locationTrackData) {
+                const [lastItemGeojsonLatitude, lastItemGeojsonLongitude] =
+                    this.lastRoutePosition;
+                let userRouteLength = locationTrackData?.length;
+                if (userRouteLength > 0) {
+                    let i = userRouteLength - 1;
+                    const lastItemLatitude = locationTrackData[i].latitude;
+                    const lastItemLongitude = locationTrackData[i].longitude;
+                    this.animateCamera(locationTrackData[i]);
+
+                    this.filterRoute({
+                        latitude: lastItemLatitude,
+                        longitude: lastItemLongitude,
+                    });
+                    if (
+                        LineHelper.checkIfInAccuracyRange({
+                            comparedValue: lastItemLatitude,
+                            baseValue: lastItemGeojsonLatitude,
+                            accuracy: this.accuracy,
+                        }) &&
+                        LineHelper.checkIfInAccuracyRange({
+                            comparedValue: lastItemLongitude,
+                            baseValue: lastItemGeojsonLongitude,
+                            accuracy: this.accuracy,
+                        })
+                    ) {
+                        await this.stopRouteFollow();
+                    }
+                }
+            }
+        } catch (err) {
+            Alert.alert("Atenção!", err.toString());
+        }
+    }
+
+    filterRoute({ latitude, longitude }) {
+        let isInRoute = false;
+        let rawGeojsonCoords = [...this.state.routeCoords];
+        let treatedGeojsonCoords = [];
+
+        let beforeCoordsLatitude = null;
+        let beforeCoordsLongitude = null;
+        let coordsLatitude = null;
+        let coordsLongitude = null;
+        let lineFunction = null;
+
+        for (let i = rawGeojsonCoords.length - 1; i >= 0; i--) {
+            coordsLatitude = rawGeojsonCoords[i].latitude;
+            coordsLongitude = rawGeojsonCoords[i].longitude;
+            treatedGeojsonCoords.unshift({
+                latitude: coordsLatitude,
+                longitude: coordsLongitude,
+            });
+
+            if (i !== 0) {
+                beforeCoordsLatitude = rawGeojsonCoords[i - 1].latitude;
+                beforeCoordsLongitude = rawGeojsonCoords[i - 1].longitude;
+                if (
+                    LineHelper.checkIfBetweenTwoPoints({
+                        value: longitude,
+                        firstLimit: beforeCoordsLongitude,
+                        secondLimit: coordsLongitude,
+                        accuracy: 0.001,
+                    }) &&
+                    LineHelper.checkIfBetweenTwoPoints({
+                        value: latitude,
+                        firstLimit: beforeCoordsLatitude,
+                        secondLimit: coordsLatitude,
+                        accuracy: 0.001,
+                    })
+                ) {
+                    lineFunction = LineHelper.createLineFunction({
+                        x0: beforeCoordsLatitude,
+                        y0: beforeCoordsLongitude,
+                        x1: coordsLatitude,
+                        y1: coordsLongitude,
+                    });
+                    if (
+                        LineHelper.subtractToValuesAbs(
+                            lineFunction(latitude),
+                            longitude
+                        ) < this.accuracy
+                    ) {
+                        isInRoute = true;
+                        treatedGeojsonCoords.unshift({
+                            latitude,
+                            longitude,
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+        console.log("isInRoute", isInRoute);
+        console.log("treatedGeojsonCoords", treatedGeojsonCoords.length);
+        this.setState({
+            routeCoords: treatedGeojsonCoords,
+        });
+    }
+
     getGeojsonLastLatLng() {
-        const featuresLength = this.geojsonRouteObj.features.length - 1;
+        const featuresLength = this.geojsonRoute.features.length - 1;
         const geojsonLength =
-            this.geojsonRouteObj.features[featuresLength].geometry.coordinates
+            this.geojsonRoute.features[featuresLength].geometry.coordinates
                 .length - 1;
 
         return [
-            this.geojsonRouteObj.features[featuresLength].geometry.coordinates[
-                geojsonLength
-            ][0],
-            this.geojsonRouteObj.features[featuresLength].geometry.coordinates[
+            this.geojsonRoute.features[featuresLength].geometry.coordinates[
                 geojsonLength
             ][1],
+            this.geojsonRoute.features[featuresLength].geometry.coordinates[
+                geojsonLength
+            ][0],
         ];
+    }
+
+    getGeojsonCoords() {
+        const tratedCoords = turf.coordAll(this.geojsonRoute);
+        return tratedCoords.map((coord) => ({
+            latitude: coord[1],
+            longitude: coord[0],
+        }));
     }
 
     openModal() {
@@ -218,14 +278,14 @@ export class RotasPercorrerScreen extends React.Component {
                     },
                 });
             } else {
-                await Location.watchPositionAsync(
+                this.clearWatchPosition = await Location.watchPositionAsync(
                     {
                         accuracy: Location.Accuracy.Highest,
                         timeInterval: 1000,
                         distanceInterval: 1,
                     },
                     ({ coords }) => {
-                        store.dispatch(locationUpdatePosition(coords));
+                        store.dispatch(locationUpdatePosition([coords]));
                     }
                 );
             }
@@ -237,7 +297,12 @@ export class RotasPercorrerScreen extends React.Component {
 
     async stopRouteFollow() {
         try {
-            await TaskManager.unregisterTaskAsync(LOCATION_TASK_NAME);
+            if (this.hasBackgroundPermission) {
+                console.log("Chegou aqui ó");
+                await TaskManager.unregisterAllTasksAsync(LOCATION_TASK_NAME);
+            } else {
+                await this.clearWatchPosition.remove();
+            }
             store.dispatch(locationStopTracking());
             this.setState({ hasStartedRoute: false });
         } catch (err) {
@@ -308,16 +373,18 @@ export class RotasPercorrerScreen extends React.Component {
                         showsCompass
                         showsScale
                     >
-                        <Geojson
-                            geojson={this.geojsonRouteObj}
-                            strokeColor="orange"
-                            fillColor="white"
-                            strokeWidth={5}
-                        />
                         <Polyline
                             coordinates={locationTrackData}
                             strokeColor="#a83291"
                             strokeWidth={10}
+                            zIndex={10}
+                        />
+                        <Geojson
+                            geojson={this.geojsonRoute}
+                            strokeColor="orange"
+                            fillColor="white"
+                            strokeWidth={5}
+                            zIndex={1}
                         />
                         {locationTrackData.length > 0 ? (
                             <Marker
@@ -462,6 +529,9 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
     if (data) {
         if (data.locations.length > 0) {
             console.log("ENVIANDO DISPATCH:");
+            console.log("[data.locations[0].coords]", [
+                data.locations[0].coords,
+            ]);
             store.dispatch(locationUpdatePosition([data.locations[0].coords]));
         }
     }
