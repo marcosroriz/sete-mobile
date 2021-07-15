@@ -49,6 +49,7 @@ export class RotasPercorrerScreen extends React.Component {
     hasBackgroundPermission = true;
     clearWatchPosition;
     state = {
+        beginningDate: 0,
         routeCoords: [],
         problemsModalIsOpened: false,
         hasStartedRoute: false,
@@ -266,6 +267,9 @@ export class RotasPercorrerScreen extends React.Component {
 
     async startRouteFollow() {
         try {
+            this.setState({
+                beginningDate: Date.now(),
+            });
             if (this.hasBackgroundPermission) {
                 await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
                     accuracy: Location.Accuracy.Highest,
@@ -303,6 +307,19 @@ export class RotasPercorrerScreen extends React.Component {
             } else {
                 await this.clearWatchPosition.remove();
             }
+            const totalTime = (Date.now() - this.state.beginningDate) / 1000;
+            console.log("totalTime", totalTime);
+
+            Alert.alert(
+                "Parabéns!!!",
+                `Você percorreu a rota em ${
+                    totalTime >= 3600
+                        ? `${(totalTime / (60 * 60)).toFixed(2)} horas`
+                        : totalTime >= 60
+                        ? `${(totalTime / 60).toFixed(2)} minutos`
+                        : `${totalTime.toFixed(2)} segundos`
+                }`
+            );
             store.dispatch(locationStopTracking());
             this.setState({ hasStartedRoute: false });
         } catch (err) {
@@ -476,6 +493,7 @@ export class RotasPercorrerScreen extends React.Component {
                             <FAB
                                 icon="navigation"
                                 color="white"
+                                label="Percorrer Rota"
                                 style={styles.startButton}
                                 onPress={async () =>
                                     await this.startRouteFollow()
