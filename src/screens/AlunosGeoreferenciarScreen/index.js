@@ -18,7 +18,7 @@ import { bindActionCreators } from "redux";
 import { dbClearAction, dbSaveAction } from "../../redux/actions/dbCRUDAction";
 
 // Widgets básicos
-import { Alert, Image, Platform, ScrollView, View } from "react-native";
+import { Alert, Image, Platform, View } from "react-native";
 import { ActivityIndicator, Appbar, Button, Card, Colors, Dialog, Divider, FAB, Paragraph, Portal, Provider as PaperProvider, Text } from "react-native-paper";
 import { withTheme } from "react-native-paper";
 
@@ -146,7 +146,12 @@ class AlunosGeoreferenciarScreen extends Component {
             // TODO: Redirecionar o usuário para a tela anterior
             this.setState({ gpsHabilitado: false });
         } else {
-            let localizacaoParams = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
+            let localizacaoParams = await Location.getLastKnownPositionAsync({ maxAge: 30000 });
+
+            if (localizacaoParams == null) {
+                localizacaoParams = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
+            }
+
             this.setState({
                 obteveGPS: true,
                 region: {
@@ -257,8 +262,8 @@ class AlunosGeoreferenciarScreen extends Component {
         );
     }
 
-    renderDialogos(finishedOperation, iniciouSalvamento) {
-        if (finishedOperation && iniciouSalvamento) {
+    renderDialogos(iniciouSalvamento, terminouOperacaoNaInternet, terminouOperacaoNoCache, terminouOperacaoComErro) {
+        if (iniciouSalvamento && terminouOperacaoNaInternet && !terminouOperacaoComErro) {
             return (
                 <Portal>
                     <Dialog visible={true} onDismiss={() => this.props.navigation.navigate("DashboardScreen")}>
@@ -272,10 +277,36 @@ class AlunosGeoreferenciarScreen extends Component {
                     </Dialog>
                 </Portal>
             );
+        } else if (iniciouSalvamento && terminouOperacaoNoCache && !terminouOperacaoComErro) {
+            return (
+                <Portal>
+                    <Dialog visible={true} onDismiss={() => this.props.navigation.navigate("DashboardScreen")}>
+                        <Dialog.Title>Posição salva com sucesso (offline)</Dialog.Title>
+                        <Dialog.Content>
+                            <Paragraph>O dispositivo se encontra offline, mas os dados foram salvos com sucesso</Paragraph>
+                        </Dialog.Content>
+                        <Dialog.Actions>
+                            <Button onPress={() => this.props.navigation.navigate("DashboardScreen")}>Retornar ao menu</Button>
+                        </Dialog.Actions>
+                    </Dialog>
+                </Portal>
+            );
+        } else if (terminouOperacaoComErro) {
+            <Portal>
+                <Dialog visible={true} onDismiss={() => this.props.navigation.navigate("DashboardScreen")}>
+                    <Dialog.Title>Erro ao tentar salvar a posição.</Dialog.Title>
+                    <Dialog.Content>
+                        <Paragraph>Verifique se sua internet ou GPS está habilitado e tente novamente.</Paragraph>
+                    </Dialog.Content>
+                    <Dialog.Actions>
+                        <Button onPress={() => this.props.navigation.navigate("DashboardScreen")}>Retornar ao menu</Button>
+                    </Dialog.Actions>
+                </Dialog>
+            </Portal>;
         } else {
             return (
                 <Portal>
-                    <Dialog visible={this.state.iniciouSalvamento} dismissable={false}>
+                    <Dialog visible={iniciouSalvamento} dismissable={false}>
                         <Dialog.Title>Salvando</Dialog.Title>
                         <Dialog.Content>
                             <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -290,7 +321,7 @@ class AlunosGeoreferenciarScreen extends Component {
     }
 
     render() {
-        const { finishedOperation } = this.props;
+        const { terminouOperacaoNaInternet, terminouOperacaoNoCache, terminouOperacaoComErro } = this.props;
         const { iniciouSalvamento, nomeAluno, obteveGPS } = this.state;
 
         if (!obteveGPS) {
@@ -314,7 +345,7 @@ class AlunosGeoreferenciarScreen extends Component {
                     <View style={styles.container}>
                         {this.renderMapa(nomeAluno)}
                         {this.renderBotoes()}
-                        {this.renderDialogos(finishedOperation, iniciouSalvamento)}
+                        {this.renderDialogos(iniciouSalvamento, terminouOperacaoNaInternet, terminouOperacaoNoCache, terminouOperacaoComErro)}
                     </View>
                 </PaperProvider>
             );
@@ -324,7 +355,7 @@ class AlunosGeoreferenciarScreen extends Component {
     cancelar() {
         Alert.alert("Cancelar edição?", "Você tem certeza que deseja cancelar as alterações? Se sim, nenhuma alteração será realizada.", [
             {
-                text: "Não, voltar a editar"
+                text: "Não, voltar a editar",
             },
             {
                 text: "Sim, cancelar",
@@ -337,7 +368,7 @@ class AlunosGeoreferenciarScreen extends Component {
     salvar() {
         Alert.alert("Salvar posição?", "Você tem certeza que deseja enviar as alterações?", [
             {
-                text: "Não, voltar a editar"
+                text: "Não, voltar a editar",
             },
             {
                 text: "Sim, salvar",
@@ -367,12 +398,13 @@ class AlunosGeoreferenciarScreen extends Component {
 
 // Mapeamento redux
 const mapStateToProps = (store) => ({
-    currentUser: store.userState.currentUser,
+    terminouOperacaoNaInternet: store.dbState.terminouOperacaoNaInternet,
+    terminouOperacaoNoCache: store.dbState.terminouOperacaoNoCache,
+    terminouOperacaoComErro: store.dbState.terminouOperacaoComErro,
+
     dbData: store.dbState.data,
-    finishedOperation: store.dbState.finishedOperation,
-    errorOcurred: store.dbState.errorOcurred,
 });
 
-const mapDispatchProps = (dispatch) => bindActionCreators({ dbClearAction: dbClearAction, dbSaveAction: dbSaveAction }, dispatch);
+const mapDispatchProps = (dispatch) => bindActionCreators({ dbClearAction, dbSaveAction }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchProps)(withTheme(AlunosGeoreferenciarScreen));

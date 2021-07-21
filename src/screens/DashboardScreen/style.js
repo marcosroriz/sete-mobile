@@ -1,6 +1,23 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
 export default StyleSheet.create({
+    fabOperacoesPendentes: {
+        backgroundColor: "orange",
+        position: 'absolute',
+        bottom: 25,
+    },
+    bannerOperacoesPendentes: {
+        backgroundColor: "gray",
+        height: 10,
+    },
+    bannerOperacoesPendentesTitulo: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "white",
+    },
+    bannerOperacoesPendentesSubTitulo: {
+        color: "white"
+    },
     syncContainer: {
         flex: 1,
         justifyContent: 'center',
