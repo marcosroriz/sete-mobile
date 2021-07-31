@@ -2,33 +2,31 @@
 // Configure redux, including middleware (thunk) and persistence
 
 // Basic Imports
-import { createStore, applyMiddleware } from 'redux';
+import { createStore, applyMiddleware, compose } from "redux";
 import thunk from "redux-thunk";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Our reducers
-import rootReducer from "../redux/reducers"
+import rootReducer from "../redux/reducers";
 
 // Persistence
-import { persistStore, persistReducer } from 'redux-persist';
-import hardSet from 'redux-persist/lib/stateReconciler/hardSet';
+import { persistStore, persistReducer } from "redux-persist";
+import hardSet from "redux-persist/lib/stateReconciler/hardSet";
 
 const persistConfig = {
-    key: 'root',
-    storage: AsyncStorage,
-    // stateReconciler: hardSet,
-    blacklist: ["userState"]
-}
+  key: "root",
+  storage: AsyncStorage,
+  // stateReconciler: hardSet,
+  blacklist: ["userState"],
+};
 
-const persistedReducer = persistReducer(persistConfig, rootReducer)
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 // Redux Store and Persistor
-export const store = createStore(persistedReducer, applyMiddleware(thunk));
-export const persistor = persistStore(store);
-
-
-// // Redux Store and Persistor
-
-// export const store = createStore(persistedReducer, window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || applyMiddleware(thunk));
+// export const store = createStore(persistedReducer, applyMiddleware(thunk));
 // export const persistor = persistStore(store);
 
+// // Redux Store and Persistor
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+export const store = createStore(persistedReducer, composeEnhancers(applyMiddleware(thunk)));
+export const persistor = persistStore(store);
