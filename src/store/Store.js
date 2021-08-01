@@ -17,7 +17,7 @@ const persistConfig = {
   key: "root",
   storage: AsyncStorage,
   // stateReconciler: hardSet,
-  blacklist: ["userState"],
+  blacklist: ["usuario"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

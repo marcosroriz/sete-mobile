@@ -14,23 +14,35 @@ export default StyleSheet.create({
         fontSize: 30,
         // paddingBottom: 30,
     },
-
+    screenContainer: {
+        flex: 1,
+        justifyContent: "center",
+        backgroundColor: "#EFF2F7",
+        fontSize: 30,
+        paddingBottom: 10,
+    },
+    scrollContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 10,
+        fontSize: 30,
+    },
     // Cabeçalho inferior
     subHeader: {
         backgroundColor: "white",
-        height: 50
+        height: 50,
     },
 
     // Floating buttons
     fabCancel: {
         backgroundColor: "red",
-        position: 'absolute',
+        position: "absolute",
         margin: 16,
         left: 0,
         bottom: 0,
     },
     fabSave: {
-        position: 'absolute',
+        position: "absolute",
         margin: 16,
         right: 0,
         bottom: 0,

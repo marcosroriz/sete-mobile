@@ -1,21 +1,23 @@
 /**
- * DashboardScreen.js is the application menu screen.
+ * DashboardScreen.js
  *
- * The dashboard lists the existing screens, alongside basic information about the city, e.g., name and state.
+ * A tela principal da aplicação móvel.
+ * Lista as telas existentes, além de informações básicas do município, como nome e estado.
+ * Além disso, lista operações pendentes (realizadas offline), para que o usuário possa enviá-las quando tiver conexão.
  */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////// IMPORTS ////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Basic React Imports
+// Imports básicos
 import React, { Component } from "react";
 
 // Redux Store
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import { logoutAction } from "../../redux/actions/userActions";
-import { dbEnviaOperacoesPendentes, dbClearAction, dbSynchronizeAction } from "../../redux/actions/dbCRUDAction";
+import { fazLogout } from "../../redux/actions/usuario";
+import { dbEnviaOperacoesPendentes, dbLimparAcoes, dbSincronizar } from "../../redux/actions/db";
 
 // Widgets
 import { Alert, Platform, ScrollView, View } from "react-native";
@@ -40,10 +42,6 @@ import { withTheme } from "react-native-paper";
 // Style
 import styles from "./style";
 
-// Firebase
-import firebase from "firebase";
-import "@firebase/firestore";
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////// CONFIGURAÇÕES E VARIÁVEIS //////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,37 +63,30 @@ export class DashboardScreen extends Component {
 
     constructor(props) {
         super(props);
-        this.onSync = this.onSync.bind(this);
+        this.sincronizar = this.sincronizar.bind(this);
     }
 
     componentDidMount() {
-        console.log("VALOR DE FINISHED OPERATION", this.props.finishedOperation);
-        console.log("VALOR DE DBSYNC", this.props.dbIsSync);
-        this.onSync();
+        this.sincronizar();
 
         this.unsubscribeAction = this.props.navigation.addListener("focus", () => {
-            console.log("CHAMANDO AQUI?");
-            this.onSync();
+            this.sincronizar();
         });
     }
 
     componentWillUnmount() {
-        // remove event listener
+        // Remove o listener de sincronizacao
         this.unsubscribeAction();
     }
 
     logout() {
-        this.props.logoutAction();
+        this.props.fazLogout();
     }
 
-    onSync() {
-        this.props.dbClearAction();
-        this.props.dbSynchronizeAction();
+    sincronizar() {
+        this.props.dbLimparAcoes();
+        this.props.dbSincronizar();
     }
-
-    handleNavigate = (destination) => {
-        this.props.navigation.navigate(destination);
-    };
 
     renderDialogos(iniciouEnvioPendencias, terminouOperacaoNaInternet, terminouOperacaoComErro) {
         if (iniciouEnvioPendencias && terminouOperacaoNaInternet && !terminouOperacaoComErro) {
@@ -140,16 +131,24 @@ export class DashboardScreen extends Component {
             );
         }
     }
-    renderCurrentState() {
-        const { iniciouEnvioPendencias } = this.state;
-        const { currentUser, finishedOperation, filaOperacoesParaEnviar, estaConectadoInternet, terminouOperacaoNaInternet, terminouOperacaoComErro } =
-            this.props;
 
-        let cidade = currentUser?.CIDADE;
-        let estado = currentUser?.ESTADO;
+    render() {
+        const { iniciouEnvioPendencias } = this.state;
+        const {
+            usuarioAtual,
+            filaOperacoesParaEnviar,
+            estaConectadoInternet,
+            terminouOperacao,
+            terminouOperacaoNaInternet,
+            terminouOperacaoNoCache,
+            terminouOperacaoComErro,
+        } = this.props;
+
+        let cidade = usuarioAtual?.CIDADE;
+        let estado = usuarioAtual?.ESTADO;
         let numOperacoesPendentes = filaOperacoesParaEnviar.length;
 
-        if (!finishedOperation) {
+        if (!terminouOperacao) {
             return (
                 <View style={styles.syncContainer}>
                     <ActivityIndicator animating={true} color={Colors.orange500} size={100} style={styles.syncLoadingIndicator} />
@@ -180,7 +179,7 @@ export class DashboardScreen extends Component {
                                             {...props}
                                             icon="refresh"
                                             onPress={() => {
-                                                this.onSync();
+                                                this.sincronizar();
                                             }}
                                         />
                                     )}
@@ -190,19 +189,21 @@ export class DashboardScreen extends Component {
                                 <List.Item
                                     title="Visão Geral"
                                     left={(props) => <List.Icon {...props} icon="clipboard-text" style={{ leftMargin: 10 }} />}
-                                    onPress={() => this.props.navigation.navigate("StatScreen")}
+                                    onPress={() => this.props.navigation.navigate("VisaoGeralScreen")}
                                 />
                                 <List.Accordion title="Alunos" left={(props) => <List.Icon {...props} icon="face" />}>
+                                    <List.Item title="Estatistica" onPress={() => this.props.navigation.navigate("AlunosEstatisticaScreen")} />
                                     <List.Item
                                         title="Georeferenciar Aluno"
                                         onPress={() =>
-                                            this.props.navigation.navigate("OverviewScreen", {
-                                                targetData: "alunos",
-                                                keyID: "ID",
-                                                keyValue: "NOME",
-                                                targetDesc: "Selecione um aluno",
-                                                screenSubTitle: "Alunos",
-                                                editScreen: "AlunosGeoreferenciarScreen",
+                                            this.props.navigation.navigate("ListarEntidadeScreen", {
+                                                subtitulo: "Alunos",
+                                                dadoAlvo: "alunos",
+                                                descricaoTela: "Selecione um aluno",
+                                                campoUsarComoID: "ID",
+                                                campoUsarComoValor: "NOME",
+                                                estaEditando: true,
+                                                telaAlvo: "AlunosGeoreferenciarScreen",
                                             })
                                         }
                                     />
@@ -210,13 +211,14 @@ export class DashboardScreen extends Component {
                                     <List.Item
                                         title="Lista de Alunos Atendidos"
                                         onPress={() =>
-                                            this.props.navigation.navigate("OverviewScreen", {
-                                                targetData: "alunos",
-                                                keyID: "ID",
-                                                keyValue: "NOME",
-                                                targetDesc: "Alunos atendidos",
-                                                screenSubTitle: "Alunos",
-                                                editScreen: "AlunosEditScreen",
+                                            this.props.navigation.navigate("ListarEntidadeScreen", {
+                                                subtitulo: "Alunos",
+                                                dadoAlvo: "alunos",
+                                                descricaoTela: "Selecione um aluno",
+                                                campoUsarComoID: "ID",
+                                                campoUsarComoValor: "NOME",
+                                                estaEditando: true,
+                                                telaAlvo: "AlunosEdicaoScreen",
                                             })
                                         }
                                     />
@@ -274,38 +276,31 @@ export class DashboardScreen extends Component {
             );
         }
     }
-
-    render() {
-        console.log("ESTÁ AQUI NO RENDER DASHBOARD??");
-        return this.renderCurrentState();
-    }
 }
 
+// Mapeamento redux
 const mapDispatchProps = (dispatch) =>
     bindActionCreators(
         {
             dbEnviaOperacoesPendentes,
-            dbClearAction,
-            dbSynchronizeAction,
-            logoutAction,
+            dbLimparAcoes,
+            dbSincronizar,
+            fazLogout,
         },
         dispatch
     );
 
 const mapStateToProps = (store) => ({
-    currentUser: store.userState.currentUser,
-    isLogged: store.userState.isLogged,
-    dbIsSync: store.dbState.isSync,
-    dbLastUpdate: store.dbState.lastUpdate,
-    dbData: store.dbState.data,
-    finishedOperation: store.dbState.finishedOperation,
-    errorOcurred: store.dbState.errorOcurred,
+    usuarioAtual: store.usuario.usuarioAtual,
+    estaAutenticado: store.usuario.estaAutenticado,
+    estaConectadoInternet: store.usuario.estaConectadoInternet,
 
-    terminouOperacaoNaInternet: store.dbState.terminouOperacaoNaInternet,
-    terminouOperacaoComErro: store.dbState.terminouOperacaoComErro,
+    terminouOperacao: store.db.terminouOperacao,
+    terminouOperacaoNaInternet: store.db.terminouOperacaoNaInternet,
+    terminouOperacaoNoCache: store.db.terminouOperacaoNoCache,
+    terminouOperacaoComErro: store.db.terminouOperacaoComErro,
 
-    filaOperacoesParaEnviar: store.dbState.filaOperacoesParaEnviar,
-    estaConectadoInternet: store.userState.estaConectadoInternet,
+    filaOperacoesParaEnviar: store.db.filaOperacoesParaEnviar,
 });
 
 export default connect(mapStateToProps, mapDispatchProps)(withTheme(DashboardScreen));

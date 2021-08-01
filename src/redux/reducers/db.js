@@ -1,117 +1,149 @@
+/**
+ * Reducers db.js
+ *
+ * Este arquivo inclui os reducers da base de dados.
+ * Basicamente quando recebemos uma ação incluimos o estado e a ação dentro da base de dados.
+ * Também fazemos a checagem e colocamos os flags correspondentes (e.g., terminouOperacaoComErro, terminouOperacaoNoCache, etc)
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////// IMPORTS ////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import {
-    DB_CLEAR,
-    DB_SYNCHRONIZE_OK,
-    DB_SYNCHRONIZE_ERROR,
-    DB_SYNC_CACHE_EMPTY,
-    DB_SYNC_CACHE_OK,
-    DB_SYNC_CACHE_ERROR,
-    DB_SAVE_CACHE,
-    DB_SAVE_OK,
-    DB_SAVE_ERROR,
+    DB_LIMPAR_ACOES,
+    DB_SINCRONIZACAO_COMPLETA_INTERNET,
+    DB_SINCRONIZACAO_COMPLETA_CACHE,
+    DB_SINCRONIZACAO_ERRO,
+    DB_SALVAR_COMPLETO_INTERNET,
+    DB_SALVAR_COMPLETO_CACHE,
+    DB_SALVAR_ERROR,
+    DB_OPERACOES_PENDENTES_VAZIA,
+    DB_OPERACOES_PENDENTES_ENVIADAS,
+    DB_OPERACOES_PENDENTES_ERRO,
 } from "../constants/index";
 
-const initialState = {
-    lastUpdate: null,
-    isSync: false,
-    finishedOperation: false,
-    errorOcurred: false,
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////// ESTADO INICIAL /////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+const estadoInicial = {
+    dataUltimoUpdate: null,
+    estaSincronizado: false,
+
+    terminouOperacao: false,
     terminouOperacaoNaInternet: false,
     terminouOperacaoNoCache: false,
     terminouOperacaoComErro: false,
 
     filaOperacoesParaEnviar: [],
-    data: {},
+    dados: {},
 };
 
-export const db = (state = initialState, action) => {
-    console.log(action.type);
-    if (action.type == DB_CLEAR) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////// REDUCER ////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const db = (estado = estadoInicial, acao) => {
+    if (acao.type == DB_LIMPAR_ACOES) {
         return {
-            ...state,
+            ...estado,
+
+            terminouOperacao: false,
             terminouOperacaoNaInternet: false,
             terminouOperacaoNoCache: false,
             terminouOperacaoComErro: false,
-
-            finishedOperation: false,
-            errorOcurred: false,
         };
-    } else if (action.type == DB_SAVE_CACHE) {
+    } else if (acao.type == DB_SINCRONIZACAO_COMPLETA_INTERNET) {
         return {
-            ...state,
+            ...estado,
+            ...acao,
+
+            terminouOperacao: true,
+            terminouOperacaoNaInternet: true,
+            terminouOperacaoNoCache: false,
+            terminouOperacaoComErro: false,
+        };
+    } else if (acao.type == DB_SINCRONIZACAO_COMPLETA_CACHE) {
+        return {
+            ...estado,
+            ...acao,
+
+            terminouOperacao: true,
             terminouOperacaoNaInternet: false,
             terminouOperacaoNoCache: true,
             terminouOperacaoComErro: false,
-
-            filaOperacoesParaEnviar: action.filaOperacoesParaEnviar,
-            lastUpdate: action.lastUpdate,
-            data: action.data,
         };
-    } else if (action.type == DB_SAVE_OK) {
+    } else if (acao.type == DB_SINCRONIZACAO_ERRO) {
         return {
-            ...state,
-            terminouOperacaoNaInternet: true,
-            terminouOperacaoNoCache: false,
-            terminouOperacaoComErro: false,
+            ...estado,
+            ...acao,
 
-            finishedOperation: true,
-            errorOcurred: false,
-            lastUpdate: action.lastUpdate,
-            data: action.data,
-        };
-    } else if (action.type == DB_SAVE_ERROR) {
-        return {
-            ...state,
-            terminouOperacaoNaInternet: true,
+            terminouOperacao: true,
+            terminouOperacaoNaInternet: false,
             terminouOperacaoNoCache: false,
             terminouOperacaoComErro: true,
+        };
+    } else if (acao.type == DB_SALVAR_COMPLETO_CACHE) {
+        return {
+            ...estado,
+            ...acao,
 
-            finishedOperation: true,
-            errorOcurred: true,
+            terminouOperacao: true,
+            terminouOperacaoNaInternet: false,
+            terminouOperacaoNoCache: true,
+            terminouOperacaoComErro: false,
         };
-    } else if (action.type == DB_SYNCHRONIZE_OK) {
+    } else if (acao.type == DB_SALVAR_COMPLETO_INTERNET) {
         return {
-            ...state,
-            finishedOperation: true,
-            errorOcurred: false,
-            lastUpdate: action.lastUpdate,
-            isSync: action.isSync,
-            data: action.data,
-        };
-    } else if (action.type == DB_SYNCHRONIZE_ERROR) {
-        return {
-            ...state,
-            finishedOperation: true,
-            errorOcurred: true,
-            lastUpdate: action.lastUpdate,
-            isSync: action.isSync,
-            data: action.data,
-        };
-    } else if (action.type == DB_SYNC_CACHE_EMPTY) {
-        return {
-            ...state,
+            ...estado,
+            ...acao,
+
+            terminouOperacao: true,
             terminouOperacaoNaInternet: true,
             terminouOperacaoNoCache: false,
             terminouOperacaoComErro: false,
         };
-    } else if (action.type == DB_SYNC_CACHE_ERROR) {
+    } else if (acao.type == DB_SALVAR_ERROR) {
         return {
-            ...state,
+            ...estado,
+            ...acao,
+
+            terminouOperacao: true,
             terminouOperacaoNaInternet: true,
             terminouOperacaoNoCache: false,
             terminouOperacaoComErro: true,
         };
-    } else if (action.type == DB_SYNC_CACHE_OK) {
+    } else if (acao.type == DB_OPERACOES_PENDENTES_VAZIA) {
         return {
-            ...state,
+            ...estado,
+            ...acao,
+
+            terminouOperacao: true,
             terminouOperacaoNaInternet: true,
             terminouOperacaoNoCache: false,
             terminouOperacaoComErro: false,
-            lastUpdate: action.lastUpdate,
-            filaOperacoesParaEnviar: action.filaOperacoesParaEnviar,
-            data: action.data,
+        };
+    } else if (acao.type == DB_OPERACOES_PENDENTES_ERRO) {
+        return {
+            ...estado,
+
+            terminouOperacao: true,
+            terminouOperacaoNaInternet: true,
+            terminouOperacaoNoCache: false,
+            terminouOperacaoComErro: true,
+        };
+    } else if (acao.type == DB_OPERACOES_PENDENTES_ENVIADAS) {
+        return {
+            ...estado,
+            ...acao,
+
+            terminouOperacao: true,
+            terminouOperacaoNaInternet: true,
+            terminouOperacaoNoCache: false,
+            terminouOperacaoComErro: false,
         };
     } else {
-        return state;
+        return estado;
     }
 };

@@ -6,7 +6,6 @@ const initialState = {
 }
 
 export const location = (state = initialState, action) => {
-    console.log(action.type)
     if (action.type == LOCATION_TRACK_START) {
         console.log("START", state)
         console.log("START", action)

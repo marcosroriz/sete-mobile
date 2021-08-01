@@ -15,7 +15,7 @@ import React, { Component } from "react";
 // Redux
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import { dbClearAction, dbSaveAction } from "../../redux/actions/dbCRUDAction";
+import { dbLimparAcoes, dbSalvar } from "../../redux/actions/db";
 
 // Widgets básicos
 import { Alert, Image, Platform, View } from "react-native";
@@ -78,45 +78,45 @@ class AlunosGeoreferenciarScreen extends Component {
 
     componentDidMount() {
         // Limpa as ações prévias no redux
-        this.props.dbClearAction();
+        this.props.dbLimparAcoes();
 
         // Preenchimento dos dados
-        const { route, dbData } = this.props;
-        const { targetData } = route.params;
+        const { route, db } = this.props;
+        const { dadoAlvo } = route.params;
 
         // Reconstroi dados
-        this.parseDados(targetData, dbData);
+        this.parseDados(dadoAlvo, db);
 
         // Obtem localizacao
         this.obtemLocalizacao();
     }
 
     // Parse dados
-    parseDados(targetData, dbData) {
-        if (targetData) {
+    parseDados(dadoAlvo, db) {
+        if (dadoAlvo) {
             let aluno = {};
 
-            if (targetData["ID"]) aluno.ID = targetData["ID"];
-            if (targetData["NOME"]) aluno.nomeAluno = targetData["NOME"];
+            if (dadoAlvo["ID"]) aluno.ID = dadoAlvo["ID"];
+            if (dadoAlvo["NOME"]) aluno.nomeAluno = dadoAlvo["NOME"];
 
-            if (targetData["LOC_LATITUDE"] && targetData["LOC_LONGITUDE"]) {
+            if (dadoAlvo["LOC_LATITUDE"] && dadoAlvo["LOC_LONGITUDE"]) {
                 aluno.alunoTemGPS = true;
                 aluno.posAluno = {
-                    latitude: Number(targetData["LOC_LATITUDE"]),
-                    longitude: Number(targetData["LOC_LONGITUDE"]),
+                    latitude: Number(dadoAlvo["LOC_LATITUDE"]),
+                    longitude: Number(dadoAlvo["LOC_LONGITUDE"]),
                 };
                 aluno.regiaoMapa = {
-                    latitude: Number(targetData["LOC_LATITUDE"]),
-                    longitude: Number(targetData["LOC_LONGITUDE"]),
+                    latitude: Number(dadoAlvo["LOC_LATITUDE"]),
+                    longitude: Number(dadoAlvo["LOC_LONGITUDE"]),
                     latitudeDelta: 0.00922,
                     longitudeDelta: 0.00421,
                 };
             }
 
             // Pega dados da escola
-            let idEscola = dbData.escolatemalunos.filter((rel) => rel.ID_ALUNO == targetData.ID);
+            let idEscola = db.escolatemalunos.filter((rel) => rel.ID_ALUNO == dadoAlvo.ID);
             if (idEscola.length > 0) {
-                let escolaArray = dbData.escolas.filter((rel) => String(rel.ID) == idEscola[0].ID_ESCOLA);
+                let escolaArray = db.escolas.filter((rel) => String(rel.ID) == idEscola[0].ID_ESCOLA);
 
                 if (
                     escolaArray[0]["LOC_LATITUDE"] != null &&
@@ -377,7 +377,7 @@ class AlunosGeoreferenciarScreen extends Component {
                         iniciouSalvamento: true,
                     });
 
-                    let saveActions = [
+                    let operacaoSalvar = [
                         {
                             collection: "alunos",
                             id: this.state.ID,
@@ -388,7 +388,7 @@ class AlunosGeoreferenciarScreen extends Component {
                         },
                     ];
 
-                    this.props.dbSaveAction(saveActions);
+                    this.props.dbSalvar(operacaoSalvar);
                 },
                 style: "cancel",
             },
@@ -398,13 +398,13 @@ class AlunosGeoreferenciarScreen extends Component {
 
 // Mapeamento redux
 const mapStateToProps = (store) => ({
-    terminouOperacaoNaInternet: store.dbState.terminouOperacaoNaInternet,
-    terminouOperacaoNoCache: store.dbState.terminouOperacaoNoCache,
-    terminouOperacaoComErro: store.dbState.terminouOperacaoComErro,
+    terminouOperacaoNaInternet: store.db.terminouOperacaoNaInternet,
+    terminouOperacaoNoCache: store.db.terminouOperacaoNoCache,
+    terminouOperacaoComErro: store.db.terminouOperacaoComErro,
 
-    dbData: store.dbState.data,
+    db: store.db.dados,
 });
 
-const mapDispatchProps = (dispatch) => bindActionCreators({ dbClearAction, dbSaveAction }, dispatch);
+const mapDispatchProps = (dispatch) => bindActionCreators({ dbLimparAcoes, dbSalvar }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchProps)(withTheme(AlunosGeoreferenciarScreen));

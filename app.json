@@ -2,6 +2,7 @@
   "expo": {
     "name": "Sete Mobile",
     "slug": "sete-mobile",
+    "owner": "cecate-ufg",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

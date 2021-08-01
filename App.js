@@ -1,8 +1,11 @@
 /**
- * App.js is the application main entrypoint.
+ * App.js
  *
- * Here we define an App component that contains two navigation branches, inside (dashboard) and outside (needs to login).
- * In addition, we wrap App with a redux store.
+ * É o ponto principal da aplicação móvel.
+ * Aqui, realiza-se as configurações iniciais da base de dados e a estrutura de naveção com dois branches.
+ * É feito uma verificação se o usuário está conectado, caso positivo navega o mesmo para a tela de Dashboard.
+ * Caso contrário, redireciona o mesmo para a tela de login.
+ * Por fim, encapsulamos a App em uma base de redux para podermos usar o estado.
  */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -30,11 +33,11 @@ import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./src/store/Store";
 import { bindActionCreators } from "redux";
 
-// (async() => {
-//   await persistor.purge();
-//   await persistor.flush();
-//   await persistor.persist();
-//     console.log("terminou purge")
+// (async () => {
+//     await persistor.purge();
+//     await persistor.flush();
+//     await persistor.persist();
+//     console.log("TERMINOU PURGE");
 // })();
 
 // Firebase
@@ -45,27 +48,28 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 
 // Screens (telas)
+import AlunosEdicaoScreen from "./src/screens/AlunosEdicaoScreen";
+import AlunosEstatisticaScreen from "./src/screens/AlunosEstatisticaScreen";
 import AlunosGeoreferenciarScreen from "./src/screens/AlunosGeoreferenciarScreen";
-import AlunosEditScreen from "./src/screens/AlunosEditScreen";
 import AlunosMapScreen from "./src/screens/AlunosMapScreen";
+import DashboardScreen from "./src/screens/DashboardScreen";
 import GenerateRouteScreen from "./src/screens/GenerateRouteScreen";
 import LoginScreen from "./src/screens/LoginScreen";
-import DashboardScreen from "./src/screens/DashboardScreen";
-import OverviewScreen from "./src/screens/OverviewScreen";
+import ListarEntidadeScreen from "./src/screens/ListarEntidadeScreen";
 import RotasPercorrerScreen from "./src/screens/RotasPercorrerScreen";
-import StatScreen from "./src/screens/StatScreen";
+import VisaoGeralScreen from "./src/screens/VisaoGeralScreen";
 
 // Tema
 import { DefaultTheme, Provider as PaperProvider } from "react-native-paper";
 
 // Ação para informar perda de conexão
-import { mudancaNaConexao } from "./src/redux/actions/userActions";
+import { mudancaNaConexao } from "./src/redux/actions/usuario";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////// CONFIGS ////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const theme = {
+const tema = {
     ...DefaultTheme,
     roundness: 2,
     colors: {
@@ -123,8 +127,6 @@ export class App extends Component {
         // Listener da conexão
         NetInfo.addEventListener((state) => {
             this.props.mudancaNaConexao(state.type, state.isConnected);
-            console.log("Connection type", state.type);
-            console.log("Is connected?", state.isConnected);
         });
     }
 
@@ -134,8 +136,6 @@ export class App extends Component {
             require("./assets/banner-rodape-completo.png"),
             require("./assets/banner-topo.png"),
             require("./assets/barco.png"),
-            require("./assets/boat.png"),
-            require("./assets/bus-marker.png"),
             require("./assets/escola-marker.png"),
             require("./assets/favicon.png"),
             require("./assets/icon.png"),
@@ -144,29 +144,30 @@ export class App extends Component {
         ]);
 
         const fontesCacheadas = cacheFontes([FontAwesome.font, FontAwesome5.font, MaterialIcons.font, MaterialCommunityIcons.font]);
-
         await Promise.all([...imagensCacheadas, ...fontesCacheadas]);
     }
 
     render() {
-        const { isLogged } = this.props;
+        const { estaAutenticado } = this.props;
         const { cachePronto } = this.state;
 
         if (!cachePronto) {
             return <AppLoading startAsync={this.realizaCacheamento} onFinish={() => this.setState({ cachePronto: true })} onError={console.warn} />;
         } else {
             return (
-                <PaperProvider theme={theme}>
+                <PaperProvider theme={tema}>
                     <NavigationContainer>
-                        {isLogged ? (
+                        {estaAutenticado ? (
                             <Stack.Navigator initialRouteName="DashboardScreen">
                                 <Stack.Screen name="DashboardScreen" component={DashboardScreen} options={{ headerShown: false }} />
+                                <Stack.Screen name="VisaoGeralScreen" component={VisaoGeralScreen} options={{ headerShown: false }} />
+                                <Stack.Screen name="AlunosEdicaoScreen" component={AlunosEdicaoScreen} options={{ headerShown: false }} />
+                                <Stack.Screen name="AlunosEstatisticaScreen" component={AlunosEstatisticaScreen} options={{ headerShown: false }} />
                                 <Stack.Screen name="AlunosGeoreferenciarScreen" component={AlunosGeoreferenciarScreen} options={{ headerShown: false }} />
-                                <Stack.Screen name="AlunosEditScreen" component={AlunosEditScreen} options={{ headerShown: false }} />
+
                                 <Stack.Screen name="AlunosMapScreen" component={AlunosMapScreen} options={{ headerShown: false }} />
                                 <Stack.Screen name="GenerateRouteScreen" component={GenerateRouteScreen} options={{ headerShown: false }} />
-                                <Stack.Screen name="OverviewScreen" component={OverviewScreen} options={{ headerShown: false }} />
-                                <Stack.Screen name="StatScreen" component={StatScreen} options={{ headerShown: false }} />
+                                <Stack.Screen name="ListarEntidadeScreen" component={ListarEntidadeScreen} options={{ headerShown: false }} />
                                 <Stack.Screen name="RotasPercorrerScreen" component={RotasPercorrerScreen} options={{ headerShown: false }} />
                             </Stack.Navigator>
                         ) : (
@@ -181,13 +182,13 @@ export class App extends Component {
     }
 }
 
-// Redux properties
-const mapReduxEstado = (store) => ({ isLogged: store.userState?.isLogged });
+// Mapeamento redux
+const mapReduxEstado = (store) => ({ estaAutenticado: store.usuario?.estaAutenticado });
 const mapReduxAcoes = (dispatch) => bindActionCreators({ mudancaNaConexao }, dispatch);
 
 App = connect(mapReduxEstado, mapReduxAcoes)(App);
 
-// Wrap app with redux store
+// Ecanpsula a app com o estado Redux
 const AppWithStore = () => {
     return (
         <StoreProvider store={store}>
