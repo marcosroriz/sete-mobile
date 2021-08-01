@@ -27,6 +27,10 @@ export default StyleSheet.create({
         padding: 10,
         fontSize: 30,
     },
+    kbContainer: {
+        width: "100%",
+        height: "100%",
+    },
     // Cabeçalho inferior
     subHeader: {
         backgroundColor: "white",
