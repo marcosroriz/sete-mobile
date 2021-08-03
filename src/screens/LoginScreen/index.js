@@ -1,28 +1,44 @@
-// Basic React Imports
-import React, { Component } from "react"
+/**
+ * LoginScreen.js
+ *
+ * Esta tela controla o login do usuário no sistema.
+ * Atualmente, usamos o firebase para verificar as credenciais do mesmo.
+ * As credenciais também são criptografas e salvas para serem usadas sem que o usuário tenha que digitar novamente.
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////// IMPORTS ////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Imports básicos
+import React, { Component } from "react";
 
 // Redux Store
-import { connect } from "react-redux"
-import { bindActionCreators } from "redux"
-import { finishLoginUserAction } from "../../redux/actions/userActions"
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import { finalizaAcaoLogin } from "../../redux/actions/usuario";
 
-// Secure Store (for credentials)
-import * as SecureStore from 'expo-secure-store';
+// Secure Store (para as credentials)
+import * as SecureStore from "expo-secure-store";
 
 // Widgets
-import { Alert, Image, View, KeyboardAvoidingView } from 'react-native';
-import { ActivityIndicator, Button, Colors, TextInput } from 'react-native-paper';
-import { withTheme } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import { Alert, Image, View, KeyboardAvoidingView } from "react-native";
+import { ActivityIndicator, Button, Colors, TextInput } from "react-native-paper";
+import { withTheme } from "react-native-paper";
+import Icon from "react-native-vector-icons/FontAwesome";
 
 // Style
-import styles from "./style"
+import styles from "./style";
 
 // Firebase
 import firebase from "firebase";
 
-// Location
-import * as Location from 'expo-location';
+// Location (para pedir permissão)
+import * as Location from "expo-location";
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////// COMPONENTES ////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // LoginScreen
 export class LoginScreen extends Component {
@@ -30,13 +46,13 @@ export class LoginScreen extends Component {
         super(props);
 
         this.state = {
-            email: '',
-            password: '',
-            authenticating: false,
-            locationError: true,
-        }
+            email: "",
+            senha: "",
+            tentandoAutenticar: false,
+            erroPermissaoLocalizacao: true,
+        };
 
-        this.onPressSignIn = this.onPressSignIn.bind(this);
+        this.apertouBotaoLogin = this.apertouBotaoLogin.bind(this);
     }
 
     async componentDidMount() {
@@ -45,109 +61,112 @@ export class LoginScreen extends Component {
             const credentials = JSON.parse(rawCredentials);
             this.setState({
                 email: credentials.email,
-                password: credentials.password
+                senha: credentials.senha,
             });
         }
 
         let { status } = await Location.requestForegroundPermissionsAsync();
-        console.log("LOCATION STATUS", status);
-        if (status !== 'granted') {
-            this.setState({ locationError: false });
+
+        if (status !== "granted") {
+            this.setState({ erroPermissaoLocalizacao: false });
         }
     }
 
-    onPressSignIn() {
-        const { email, password } = this.state;
+    /**
+     * Handler que é ativado quando o usuário aperta o botão de login ou clica em próximo no campo de senha
+     */
+    apertouBotaoLogin() {
+        const { email, senha } = this.state;
 
         this.setState({
-            authenticating: true
+            tentandoAutenticar: true,
         });
 
-        firebase.auth()
-            .signInWithEmailAndPassword(email, password)
+        firebase
+            .auth()
+            .signInWithEmailAndPassword(email, senha)
             .then(async (firebaseUser) => {
-                console.log("LOGIN COM SUCESSO");
-                await SecureStore.setItemAsync('credentials', JSON.stringify({ email, password }));
-                this.props.finishLoginUserAction(firebaseUser.user.uid);
+                // Salva as credenciais
+                await SecureStore.setItemAsync("credentials", JSON.stringify({ email, senha }));
+
+                // Dispara ação que configura o usuário logado como usuário atual e redireciona o mesmo para dashboard
+                this.props.finalizaAcaoLogin(firebaseUser.user.uid);
             })
             .catch((err) => {
-                console.log(err)
-                Alert.alert("Erro!", "Usuário ou senha inválido",
-                    [{
+                // Não conseguimos autenticar
+                Alert.alert("Erro!", "Usuário ou senha inválido", [
+                    {
                         text: "OK",
-                        onPress: () => { this.setState({ authenticating: false }); }
-                    }]);
-            })
+                        onPress: () => {
+                            this.setState({ tentandoAutenticar: false });
+                        },
+                    },
+                ]);
+            });
     }
 
-    renderCurrentState() {
-        if (this.state.authenticating) {
+    render() {
+        if (this.state.tentandoAutenticar) {
+            // Mostra loading
             return (
                 <View style={styles.loginContainer}>
-                    <ActivityIndicator animating={true} color={Colors.orange500} size={100}
-                        style={styles.syncLoadingIndicator} />
+                    <ActivityIndicator animating={true} color={Colors.orange500} size={100} style={styles.syncLoadingIndicator} />
                 </View>
-
-            )
+            );
         } else {
+            // Mostra inputs pro usuário entrar email/senha
             return (
                 <KeyboardAvoidingView behavior="padding" style={styles.loginContainer}>
-                    <Image
-                        source={require('../../../assets/banner-topo.png')}
-                        style={styles.logo}
-                    />
+                    <Image source={require("../../../assets/banner-topo.png")} style={styles.logo} />
 
                     <TextInput
                         style={styles.txtInput}
                         autoCorrect={false}
-                        left={<TextInput.Icon name={() => <Icon name={'envelope'} size={20} />} />}
+                        left={<TextInput.Icon name={() => <Icon name={"envelope"} size={20} />} />}
                         label="E-mail"
                         placeholder="Digite seu e-mail"
                         returnKeyType="next"
                         mode="outlined"
                         value={this.state.email}
-                        onChangeText={email => this.setState({ email })}
-                        onSubmitEditing={() => { this.passwordInput.focus(); }}
+                        onChangeText={(email) => this.setState({ email })}
+                        onSubmitEditing={() => {
+                            this.inputSenha.focus();
+                        }}
                     />
 
                     <TextInput
                         style={styles.txtInput}
                         autoCorrect={false}
-                        left={<TextInput.Icon name={() => <Icon name={'lock'} size={20} />} />}
+                        left={<TextInput.Icon name={() => <Icon name={"lock"} size={20} />} />}
                         label="Senha"
                         returnKeyType="done"
                         placeholder="Digite sua senha"
                         mode="outlined"
                         secureTextEntry
-                        value={this.state.password}
-                        ref={(input) => { this.passwordInput = input; }}
-                        onChangeText={password => this.setState({ password })}
-                        onSubmitEditing={() => { this.onPressSignIn() }}
+                        value={this.state.senha}
+                        ref={(input) => {
+                            this.inputSenha = input;
+                        }}
+                        onChangeText={(senha) => this.setState({ senha })}
+                        onSubmitEditing={() => {
+                            this.apertouBotaoLogin();
+                        }}
                     />
 
-                    <Button style={styles.btnSubmit}
-                        mode="contained"
-                        onPress={() => this.onPressSignIn()}>
+                    <Button style={styles.btnSubmit} mode="contained" onPress={() => this.apertouBotaoLogin()}>
                         Entrar
                     </Button>
 
                     <View style={styles.rodapeContainer}>
-                        <Image
-                            style={styles.logoRodape}
-                            source={require("../../../assets/banner-rodape-completo.png")} />
+                        <Image style={styles.logoRodape} source={require("../../../assets/banner-rodape-completo.png")} />
                     </View>
-                </KeyboardAvoidingView >
-            )
+                </KeyboardAvoidingView>
+            );
         }
-    }
-
-    render() {
-        return (
-            this.renderCurrentState()
-        )
     }
 }
 
-const mapDispatchProps = (dispatch) => bindActionCreators({ finishLoginUserAction }, dispatch)
+// Mapeamento redux
+const mapDispatchProps = (dispatch) => bindActionCreators({ finalizaAcaoLogin }, dispatch);
 
-export default connect(null, mapDispatchProps)(withTheme(LoginScreen))
+export default connect(null, mapDispatchProps)(withTheme(LoginScreen));

@@ -4,7 +4,7 @@ import React, { Component } from "react"
 // Redux Store
 import { connect } from "react-redux"
 import { bindActionCreators } from "redux"
-import { dbClearAction, dbSaveAction } from "../../redux/actions/dbCRUDAction"
+import { dbClearAction, dbSaveAction } from "../../redux/actions/db"
 
 // Basic Widgets
 import { Alert, Image, ScrollView, View } from "react-native";

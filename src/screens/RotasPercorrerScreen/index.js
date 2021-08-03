@@ -6,7 +6,7 @@ import * as Location from 'expo-location';
 // Redux Store
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import { dbClearAction, dbSaveAction } from "../../redux/actions/dbCRUDAction";
+import { dbClearAction, dbSaveAction } from "../../redux/actions/db";
 import { locationStartTracking, locationUpdatePosition, locationStopTracking } from "../../redux/actions/locationActions";
 import { store } from "../../store/Store";
 

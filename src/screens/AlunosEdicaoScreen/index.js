@@ -101,6 +101,9 @@ class AlunosEdicaoScreen extends Component {
 
         // Variáveis (workaround)
         ignoraPrimeiraEntrada: true,
+
+        // Está editando?
+        estaEditando: true,
     };
 
     dateFormatter = new Intl.DateTimeFormat("pt");
@@ -217,7 +220,10 @@ class AlunosEdicaoScreen extends Component {
 
         // Preenchimento dos dados
         const { route, db } = this.props;
-        const { dadoAlvo } = route.params;
+        const { estaEditando, dadoAlvo } = route.params;
+
+        // Estamos editando ou só mostrando o dado?
+        this.setState({ estaEditando });
 
         // Escolas
         let escolasArray = [{ label: "Escolher depois...", value: null }];
@@ -249,7 +255,7 @@ class AlunosEdicaoScreen extends Component {
         this.obtemLocalizacao();
     }
 
-    subTelaDadosBasicos() {
+    subTelaDadosBasicos(estaEditando) {
         return (
             <KeyboardAwareScrollView style={styles.kbContainer}>
                 <View style={styles.inputContainer}>
@@ -263,6 +269,7 @@ class AlunosEdicaoScreen extends Component {
                         value={this.state.nome}
                         selection={{ start: 0 }}
                         onChangeText={(nome) => this.setState({ nome })}
+                        disabled={!estaEditando}
                     />
                     <View style={styles.inputInsideContainer}>
                         <Text style={styles.labelPicker}>Data de nascimento:</Text>
@@ -284,11 +291,17 @@ class AlunosEdicaoScreen extends Component {
                                     dataDeNascimento: text,
                                 });
                             }}
+                            disabled={!estaEditando}
                         />
                     </View>
                     <View style={styles.inputInsideContainer}>
                         <Text style={styles.labelPicker}>Sexo do Aluno:</Text>
-                        <RadioButton.Group onValueChange={(value) => this.setState({ sexo: value })} value={this.state.sexo} uncheckedColor="red">
+                        <RadioButton.Group
+                            onValueChange={(value) => this.setState({ sexo: value })}
+                            value={this.state.sexo}
+                            uncheckedColor="red"
+                            disabled={!estaEditando}
+                        >
                             <RadioButton.Item mode="android" label="Masculino" value={1} color={this.props.theme.colors.primary} uncheckedColor="gray" />
                             <RadioButton.Item mode="android" label="Feminino" value={2} color={this.props.theme.colors.primary} uncheckedColor="gray" />
                             <RadioButton.Item mode="android" label="Não Informado" value={3} color={this.props.theme.colors.primary} uncheckedColor="gray" />
@@ -304,6 +317,7 @@ class AlunosEdicaoScreen extends Component {
                         value={this.state.nomeResponsavel}
                         selection={{ start: 0 }}
                         onChangeText={(nomeResponsavel) => this.setState({ nomeResponsavel })}
+                        disabled={!estaEditando}
                     />
                     <View style={styles.inputInsideContainer}>
                         <Text style={styles.labelPicker}>Telefone do responsável:</Text>
@@ -327,6 +341,7 @@ class AlunosEdicaoScreen extends Component {
                                     telefoneResponsavel: text,
                                 });
                             }}
+                            disabled={!estaEditando}
                         />
                     </View>
                     <View style={styles.inputInsideContainer}>
@@ -335,6 +350,7 @@ class AlunosEdicaoScreen extends Component {
                             onValueChange={(value) => this.setState({ localizacaoAluno: value })}
                             value={this.state.localizacaoAluno}
                             uncheckedColor="red"
+                            disabled={!estaEditando}
                         >
                             <RadioButton.Item mode="android" label="Urbana" value={1} color={this.props.theme.colors.primary} uncheckedColor="gray" />
                             <RadioButton.Item mode="android" label="Rural" value={2} color={this.props.theme.colors.primary} uncheckedColor="gray" />
@@ -345,7 +361,7 @@ class AlunosEdicaoScreen extends Component {
         );
     }
 
-    subtelaDadosEscolares() {
+    subtelaDadosEscolares(estaEditando) {
         return (
             <ScrollView style={styles.scrollContainer}>
                 <View style={styles.inputContainer}>
@@ -402,11 +418,17 @@ class AlunosEdicaoScreen extends Component {
                             }}
                             title="Escola do aluno"
                             placeholder="Selecione uma escola"
+                            disabled={!estaEditando}
                         />
                     </View>
                     <View style={styles.inputWrapper}>
                         <Text style={styles.labelPicker}>Turno:</Text>
-                        <RadioButton.Group onValueChange={(value) => this.setState({ turno: value })} value={this.state.turno} uncheckedColor="red">
+                        <RadioButton.Group
+                            onValueChange={(value) => this.setState({ turno: value })}
+                            value={this.state.turno}
+                            uncheckedColor="red"
+                            disabled={!estaEditando}
+                        >
                             <RadioButton.Item mode="android" label="Manhã" value={1} color={this.props.theme.colors.primary} uncheckedColor="gray" />
                             <RadioButton.Item
                                 mode="android"
@@ -421,7 +443,12 @@ class AlunosEdicaoScreen extends Component {
                     </View>
                     <View style={styles.inputWrapper}>
                         <Text style={styles.labelPicker}>Turno:</Text>
-                        <RadioButton.Group onValueChange={(value) => this.setState({ nivel: value })} value={this.state.nivel} uncheckedColor="red">
+                        <RadioButton.Group
+                            onValueChange={(value) => this.setState({ nivel: value })}
+                            value={this.state.nivel}
+                            uncheckedColor="red"
+                            disabled={!estaEditando}
+                        >
                             <RadioButton.Item
                                 mode="android"
                                 label="Infantil (Pré-escolar)"
@@ -437,11 +464,10 @@ class AlunosEdicaoScreen extends Component {
                     </View>
                 </View>
             </ScrollView>
-            // </KeyboardAvoidingView >
         );
     }
 
-    subtelaGPS() {
+    subtelaGPS(estaEditando) {
         return (
             <View style={styles.page}>
                 <View style={styles.mapContainer}>
@@ -458,10 +484,12 @@ class AlunosEdicaoScreen extends Component {
                             //     latitudeDelta: 0.00922,
                             //     longitudeDelta: 0.00421
                             // })
-                            this.setState({
-                                posAluno: geoEvent.nativeEvent.coordinate,
-                                alunoTemLocalizacao: true,
-                            });
+                            if (estaEditando) {
+                                this.setState({
+                                    posAluno: geoEvent.nativeEvent.coordinate,
+                                    alunoTemLocalizacao: true,
+                                });
+                            }
                         }}
                         showsUserLocation
                         showsMyLocationButton
@@ -554,7 +582,7 @@ class AlunosEdicaoScreen extends Component {
 
     render() {
         const { terminouOperacaoNaInternet, terminouOperacaoNoCache, terminouOperacaoComErro } = this.props;
-        const { iniciouSalvamento } = this.state;
+        const { estaEditando, iniciouSalvamento } = this.state;
 
         return (
             <PaperProvider theme={this.props.theme}>
@@ -575,13 +603,13 @@ class AlunosEdicaoScreen extends Component {
                         showLeadingSpace={true} //  (default=true) show leading space in scrollable tabs inside the header
                     >
                         <TabScreen label="Dados" icon="account">
-                            {this.subTelaDadosBasicos()}
+                            {this.subTelaDadosBasicos(estaEditando)}
                         </TabScreen>
                         <TabScreen label="Escola" icon="school">
-                            {this.subtelaDadosEscolares()}
+                            {this.subtelaDadosEscolares(estaEditando)}
                         </TabScreen>
                         <TabScreen label="Posição" icon="map">
-                            {this.subtelaGPS()}
+                            {this.subtelaGPS(estaEditando)}
                         </TabScreen>
                     </Tabs>
                     <FAB
