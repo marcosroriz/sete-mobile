@@ -521,11 +521,11 @@ export class AlunosMapScreen extends Component {
                                                 title={infoAlunoSelecionado.turno}
                                             />
                                             <View style={styles.moreMapInfoButtonsContainer}>
-                                                <Button
+                                                {/* <Button
                                                     style={styles.moreMapInfoButtons}
                                                     mode="contained"
                                                     onPress={() => {
-                                                        this.props.navigation.navigate("AlunosEditScreen", {
+                                                        this.props.navigation.navigate("AlunosEdicaoScreen", {
                                                             dadoAlvo: infoAlunoSelecionado,
                                                             estaEditando: false,
                                                             subtitulo: "Alunos",
@@ -533,7 +533,7 @@ export class AlunosMapScreen extends Component {
                                                     }}
                                                 >
                                                     Ver Aluno
-                                                </Button>
+                                                </Button> */}
                                                 <Button
                                                     style={styles.moreMapInfoButtons}
                                                     mode="contained"
