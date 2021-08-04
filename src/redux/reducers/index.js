@@ -1,10 +1,10 @@
 import { combineReducers } from "redux";
 import { usuario } from "./usuario";
 import { db } from "./db";
-import { location } from "./location";
+import { localizacao } from "./localizacao";
 
 const Reducers = combineReducers({
-    locState: location,
+    localizacao: localizacao,
     usuario: usuario,
     db: db,
 });

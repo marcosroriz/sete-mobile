@@ -56,8 +56,6 @@ const SpecificStyle = StyleSheet.create({
     },
 });
 
-const styles = StyleSheet.flatten(
-    StyleSheet.compose(CommonStyle, SpecificStyle)
-);
+const styles = StyleSheet.flatten(StyleSheet.compose(CommonStyle, SpecificStyle));
 
 export default styles;
