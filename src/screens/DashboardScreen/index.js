@@ -245,7 +245,20 @@ export class DashboardScreen extends Component {
                                 <List.Accordion title="Rotas" left={(props) => <List.Icon {...props} icon="map" />}>
                                     <List.Item title="Gerar rota usando o GPS" onPress={() => this.props.navigation.navigate("GenerateRouteScreen")} />
                                     <List.Item title="Mapa de Escolas Atendidas" />
-                                    <List.Item title="Percorrer rota" onPress={() => this.props.navigation.navigate("RotasPercorrerScreen")} />
+                                    <List.Item
+                                        title="Percorrer rota"
+                                        onPress={() =>
+                                            this.props.navigation.navigate("ListarEntidadeScreen", {
+                                                subtitulo: "Escolha uma rota",
+                                                dadoAlvo: "rotas",
+                                                descricaoTela: "Rotas cadastradas",
+                                                campoUsarComoID: "ID",
+                                                campoUsarComoValor: "NOME",
+                                                estaEditando: true,
+                                                telaAlvo: "RotasPercorrerScreen",
+                                            })
+                                        }
+                                    />
                                 </List.Accordion>
                             </List.Section>
                         </ScrollView>
