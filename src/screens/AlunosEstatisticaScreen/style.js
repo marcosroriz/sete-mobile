@@ -2,6 +2,14 @@ import { StyleSheet } from "react-native";
 import CommonStyle from "../../styles/CommonStyle";
 
 const SpecificStyle = StyleSheet.create({
+    tituloGrafico: {
+        // color: "red",
+        textAlign: "center",
+        fontVariant: ["small-caps"],
+        margin: 0,
+        padding: 0,
+        // backgroundColor: "blue"
+    },
     clusterWrapper: {
         padding: 10,
         backgroundColor: "#fee6ce",

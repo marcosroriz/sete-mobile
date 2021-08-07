@@ -33,12 +33,12 @@ import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./src/store/Store";
 import { bindActionCreators } from "redux";
 
-// (async () => {
-//     await persistor.purge();
-//     await persistor.flush();
-//     await persistor.persist();
-//     console.log("TERMINOU PURGE");
-// })();
+(async () => {
+    await persistor.purge();
+    await persistor.flush();
+    await persistor.persist();
+    console.log("TERMINOU PURGE");
+})();
 
 // Firebase
 import * as firebase from "firebase";

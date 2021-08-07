@@ -25,6 +25,7 @@ import { LineChart, BarChart, PieChart, ProgressChart, ContributionGraph, Stacke
 
 // Style
 import styles from "./style";
+import paletaCores from "../../styles/EstatisticaStyle";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////// CONFIGURAÇÕES E VARIÁVEIS //////////////////////////////////////////////////////////////////////////////////////
@@ -36,16 +37,33 @@ const isIOS = Platform.OS === "ios";
 // Tamanho da tela
 const tamanhoTela = Dimensions.get("window").width;
 
+// Tamanho da paleta
+const tamanhoPaleta = paletaCores.length;
+
 // Configuração do gráfico
 const configGrafico = {
-    backgroundGradientFrom: "#1E2923",
-    backgroundGradientFromOpacity: 0,
-    backgroundGradientTo: "#08130D",
-    backgroundGradientToOpacity: 0.5,
-    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+    decimalPlaces: 0,
+    backgroundGradientFrom: "#222222",
+    backgroundGradientFromOpacity: 1,
+    backgroundGradientTo: "#aaaaaa",
+    backgroundGradientToOpacity: 1,
+    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
     strokeWidth: 2, // optional, default 3
-    barPercentage: 0.5,
+    barPercentage: 0.8,
     useShadowColorFromDataset: false, // optional
+    /*propsForVerticalLabels: {
+        fontSize: "20",
+        fontWeight: "bold",
+    },*/
+    // style: {
+    //     borderRadius: 50,
+    // },
+    // propsForDots: {
+    //     r: "6",
+    //     strokeWidth: "2",
+    //     stroke: "#ffa726",
+    // },
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,9 +77,11 @@ class AlunosEstatisticaScreen extends Component {
     parseDados(dbData) {
         // Pegando dados da base de dados
         // Só considerar num alunos que estão vinculados a escolas
-        let numAlunosAtendidos = dbData?.escolatemalunos?.length;
-        let numEscolasAtendidas = new Set();
+        let numAlunosEmEscola = dbData?.escolatemalunos?.length;
+        let numAlunosEmRota = dbData?.rotaatendealuno?.length;
+        let numAlunosTotal = dbData?.alunos.length;
 
+        let numEscolasAtendidas = new Set();
         dbData.escolatemalunos.forEach((escola) => numEscolasAtendidas.add(escola.ID_ESCOLA));
 
         // Número de Rotas
@@ -93,47 +113,143 @@ class AlunosEstatisticaScreen extends Component {
         let numVeiculosOperando = 0;
         dbData.veiculos.forEach((v) => (v.MANUTENCAO ? numVeiculosManutencao++ : numVeiculosOperando++));
 
-        return { numAlunosAtendidos, numEscolasAtendidas, numRotasRodoviario, numRotasAquaviario, numMotoristas, numVeiculosManutencao, numVeiculosOperando };
+        return {
+            numAlunosTotal,
+            numAlunosEmEscola,
+            numAlunosEmRota,
+            numEscolasAtendidas,
+            numRotasRodoviario,
+            numRotasAquaviario,
+            numMotoristas,
+            numVeiculosManutencao,
+            numVeiculosOperando,
+        };
+    }
+
+    renderGraficoPizza(dados, campoNome, campoValor, altura = 220) {
+        let dadosGrafico = [];
+        let i = 0;
+        for (let dado of dados) {
+            dadosGrafico.push({
+                name: dado[campoNome],
+                valores: dado[campoValor],
+                color: paletaCores[i++ % tamanhoPaleta],
+                legendFontColor: "black",
+                legendFontSize: 14,
+            });
+        }
+
+        console.log(dadosGrafico);
+
+        return (
+            <PieChart
+                data={dadosGrafico}
+                width={0.95 * tamanhoTela}
+                height={150}
+                chartConfig={configGrafico}
+                accessor={"valores"}
+                backgroundColor={"transparent"}
+                hasLegend={true}
+                paddingLeft={"0"}
+                center={[10, 0]}
+                absolute={false}
+                avoidFalseZero={true}
+                // absolute
+                style={{
+                    backgroundGradientFrom: "#222222",
+                    backgroundGradientFromOpacity: 0.5,
+                    backgroundGradientTo: "#222222",
+                    backgroundGradientToOpacity: 1,
+
+                    backgroundColor: "#cccccc",
+                    // marginVertical: 8,
+                    borderRadius: 16,
+                    // marginTop: 50,
+                    marginBottom: 50,
+                    // paddingBottom: 50
+                    // marginRight: 50,
+                }}
+            />
+        );
+    }
+
+    renderGraficoNivelDeEscolaridade(db) {
+        let campos = ["Creche", "Fundamental", "Médio", "Superior", "Outro"];
+        let dados = [];
+        for (let i in campos) {
+            console.log(i);
+            dados.push({
+                name: campos[i],
+                valores: 0,
+                color: paletaCores[i % tamanhoPaleta],
+                legendFontColor: "black",
+                legendFontSize: 15,
+            });
+        }
+
+        db.escolatemalunos.forEach((rel) => {
+            let idAluno = rel.ID_ALUNO;
+            let alunoArray = db.alunos.filter((aluno) => String(aluno.ID) == idAluno);
+            let nivel = Number(alunoArray[0].NIVEL) - 1;
+            dados[nivel].valores++;
+        });
+        console.log(dados);
+
+        let dataset = [];
+        let cores = [];
+        for (let i in campos) {
+            dataset.push(dados[i].valores);
+            cores.push((opacity = 1) => dados[i].color);
+        }
+        const dadosGrafico = {
+            labels: campos,
+            datasets: [
+                {
+                    data: dataset,
+                    colors: cores,
+                },
+            ],
+        };
+        console.log(db.escolatemalunos.length);
+        console.log(dadosGrafico);
+
+        return (
+            <BarChart
+                // style={configGrafico}
+                data={dadosGrafico}
+                width={0.95 * tamanhoTela}
+                height={220}
+                chartConfig={configGrafico}
+                // verticalLabelRotation={30}
+                // withHorizontalLabels={true}
+                withHorizontalLabels={false}
+                withCustomBarColorFromData={true}
+                flatColor={true}
+                showBarTops={true}
+                showValuesOnTopOfBars={true}
+                withInnerLines={true}
+                segments={4}
+                style={{
+                    paddingRight: 10,
+                    marginLeft: 10,
+                    alignItems: "center",
+                    borderRadius: 20,
+                }}
+            />
+        );
     }
 
     render() {
         const { db } = this.props;
         const estatistica = this.parseDados(db);
-        const data = [
+        const dadosAtendimento = [
             {
-                name: "Seoul",
-                population: 21500000,
-                color: "rgba(131, 167, 234, 1)",
-                legendFontColor: "#7F7F7F",
-                legendFontSize: 15,
+                name: "Sem rota cadastrada",
+                value: estatistica.numAlunosTotal - estatistica.numAlunosEmRota,
             },
             {
-                name: "Toronto",
-                population: 2800000,
-                color: "#F00",
-                legendFontColor: "#7F7F7F",
-                legendFontSize: 15,
-            },
-            {
-                name: "Beijing",
-                population: 527612,
-                color: "red",
-                legendFontColor: "#7F7F7F",
-                legendFontSize: 15,
-            },
-            {
-                name: "New York",
-                population: 8538000,
-                color: "#ffffff",
-                legendFontColor: "#7F7F7F",
-                legendFontSize: 15,
-            },
-            {
-                name: "Moscow",
-                population: 11920000,
-                color: "rgb(0, 0, 255)",
-                legendFontColor: "#7F7F7F",
-                legendFontSize: 15,
+                name: "Com rota cadastrada",
+                value: estatistica.numAlunosEmRota,
             },
         ];
 
@@ -145,8 +261,16 @@ class AlunosEstatisticaScreen extends Component {
                 </Appbar.Header>
                 <View style={styles.screenContainer}>
                     <ScrollView contentContainerStyle={styles.scrollContainer}>
-                        <Title></Title>
-                        <PieChart
+                        <View>
+                            <Title style={styles.tituloGrafico}>Porcentagem de alunos atendidos</Title>
+                            {this.renderGraficoPizza(dadosAtendimento, "name", "value")}
+                        </View>
+
+                        <View style={{ width: "100%", alignContent: "center" }}>
+                            <Title style={styles.tituloGrafico}>Distribuição de alunos por nível de escolaridade</Title>
+                            {this.renderGraficoNivelDeEscolaridade(db)}
+                        </View>
+                        {/* <PieChart
                             data={data}
                             width={tamanhoTela}
                             height={220}
@@ -157,7 +281,7 @@ class AlunosEstatisticaScreen extends Component {
                             paddingLeft={"0"}
                             center={[10, 0]}
                             // absolute
-                        />
+                        /> */}
                         <List.Section style={styles.infoSection}>
                             <List.Item
                                 title="Alunos Atendidos"

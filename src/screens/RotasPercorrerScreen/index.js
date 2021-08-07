@@ -2,7 +2,7 @@
  * RotasPercorrerScreen.js
  *
  * Esta tela permite que o usuário inicie a ação de percorrer uma rota.
- * Tal informação será encaminhada a base de dados para ser analisada .
+ * Tal informação será encaminhada a base de dados para ser analisada pelos gestores.
  */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,15 +47,15 @@ import { LineHelper } from "../../helpers/LineHelper";
 
 import iconeOnibus from "../../../assets/onibus.png";
 import iconeBarco from "../../../assets/barco.png";
+import iconeComeco from "../../../assets/inicio.png";
 
-const LOCATION_TASK_NAME = "background-location-task";
+const LOCATION_BG_TASK = "background-location-task";
 
-TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
+TaskManager.defineTask(LOCATION_BG_TASK, async ({ data, error }) => {
     console.log("DATA", data);
     console.log("Error", error);
     if (error) {
-        // Error occurred - check `error.message` for more details.
-        return;
+        console.log("error", error);
     }
     if (data) {
         if (data.locations.length > 0) {
@@ -73,48 +73,65 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
 export class RotasPercorrerScreen extends React.Component {
     accuracy = 0.001;
     routeLastPosition = [];
-    geojsonRoute = {};
-    routeIcon = iconeOnibus;
-    hasBackgroundPermission = true;
-    clearWatchPosition;
+
+    geojsonRota = {};
+    primeiraPosicaoDaRota = [];
+    ultimaPosicaoDaRota = [];
+
+    iconeVeiculo = iconeOnibus;
+    temPermissaoLocBackground = true;
+    monitorPosicao;
+
     state = {
-        beginningDate: 0,
-        routeCoords: [],
+        dataInicio: 0,
+        coordenadasDaRota: [],
         problemsModalIsOpened: false,
-        hasStartedRoute: false,
+        comecouRota: false,
         buttonGroupIsOppened: false,
         radioOptions: "",
         optionDescription: "",
     };
 
-    animateCamera({ latitude, longitude, heading = null, altitude = 300, pitch = 90, zoom = 15 }) {
+    animateCamera({ latitude, longitude, heading = 0, altitude = 300, pitch = 45, zoom = 16 }) {
+        console.log(latitude, longitude, heading, altitude, pitch, zoom);
         if (this.mapRef !== null && this.mapRef !== undefined)
             this.mapRef.animateCamera({
-                center: { latitude: latitude, longitude: longitude },
-                pitch: pitch,
-                heading: heading,
-                zoom: zoom,
-                altitude: altitude,
+                center: { latitude, longitude },
+                pitch: 0,
+                heading,
+                zoom,
+                altitude,
             });
+    }
+
+    parseDados(dadoAlvo, db) {
+        this.iconeVeiculo = dadoAlvo["TIPO"] === "1" ? iconeOnibus : iconeBarco;
+
+        // GeoJSON
+        this.geojsonRota = turf.toWgs84(JSON.parse(dadoAlvo["SHAPE"]));
+        this.primeiraPosicaoDaRota = this.getPrimeiraPosicaoRota();
+        this.ultimaPosicaoDaRota = this.getUltimaPosicaoRota();
+        this.setState({ coordenadasDaRota: [...this.getGeojsonCoords()] });
+
+        
     }
 
     async componentDidMount() {
         try {
             // Rota a ser percorrida colocada em um estado
-            if (targetData) this.props.dbLimparAcoes();
+            if (dadoAlvo) this.props.dbLimparAcoes();
             this.props.locComecarRastreamento();
 
-            const { targetData } = this.props.route.params;
-            this.routeIcon = targetData["TIPO"] === "1" ? iconeOnibus : iconeBarco;
-            this.geojsonRoute = turf.toWgs84(JSON.parse(targetData["SHAPE"]));
-            this.lastRoutePosition = this.getGeojsonLastLatLng();
-            this.setState({ routeCoords: [...this.getGeojsonCoords()] });
+            const { db } = this.props;
+            const { dadoAlvo } = this.props.route.params;
 
-            //PERMISSION
+            this.parseDados(dadoAlvo, db);
+
+            // Permissão
             const foregroundPermission = await Location.requestForegroundPermissionsAsync();
             const backgroundPermission = await Location.requestBackgroundPermissionsAsync();
             if (!backgroundPermission.granted) {
-                this.hasBackgroundPermission = false;
+                this.temPermissaoLocBackground = false;
                 if (!foregroundPermission.granted) {
                     throw "Para usar essa funcionalidade, é necessário liberar o acesso ao GPS!";
                 }
@@ -128,9 +145,9 @@ export class RotasPercorrerScreen extends React.Component {
             this.animateCamera({
                 latitude: latitude,
                 longitude: longitude,
-                pitch: 90,
-                zoom: 17,
-                heading: heading,
+                pitch: 45,
+                zoom: 16,
+                heading: 0,
                 altitude: altitude,
             });
         } catch (err) {
@@ -145,25 +162,25 @@ export class RotasPercorrerScreen extends React.Component {
     }
 
     async componentWillUnmount() {
-        if (this.hasBackgroundPermission) {
-            await TaskManager.unregisterAllTasksAsync(LOCATION_TASK_NAME);
+        if (this.temPermissaoLocBackground) {
+            await TaskManager.unregisterAllTasksAsync(LOCATION_BG_TASK);
         } else {
-            await this.clearWatchPosition.remove();
+            await this.monitorPosicao.remove();
         }
     }
 
     async componentDidUpdate(prevProps, prevState) {
         try {
-            const { locationTrackData } = this.props;
+            const { vetorPosicoes } = this.props;
 
-            if (prevProps.locationTrackData !== locationTrackData) {
-                const [lastItemGeojsonLatitude, lastItemGeojsonLongitude] = this.lastRoutePosition;
-                let userRouteLength = locationTrackData?.length;
+            if (prevProps.vetorPosicoes !== vetorPosicoes) {
+                const [lastItemGeojsonLatitude, lastItemGeojsonLongitude] = this.ultimaPosicaoDaRota;
+                let userRouteLength = vetorPosicoes?.length;
                 if (userRouteLength > 0) {
                     let i = userRouteLength - 1;
-                    const lastItemLatitude = locationTrackData[i].latitude;
-                    const lastItemLongitude = locationTrackData[i].longitude;
-                    this.animateCamera(locationTrackData[i]);
+                    const lastItemLatitude = vetorPosicoes[i].latitude;
+                    const lastItemLongitude = vetorPosicoes[i].longitude;
+                    this.animateCamera(vetorPosicoes[i]);
 
                     this.filterRoute({
                         latitude: lastItemLatitude,
@@ -192,7 +209,7 @@ export class RotasPercorrerScreen extends React.Component {
 
     filterRoute({ latitude, longitude }) {
         let isInRoute = false;
-        let rawGeojsonCoords = [...this.state.routeCoords];
+        let rawGeojsonCoords = [...this.state.coordenadasDaRota];
         let treatedGeojsonCoords = [];
 
         let beforeCoordsLatitude = null;
@@ -246,22 +263,26 @@ export class RotasPercorrerScreen extends React.Component {
         console.log("isInRoute", isInRoute);
         console.log("treatedGeojsonCoords", treatedGeojsonCoords.length);
         this.setState({
-            routeCoords: treatedGeojsonCoords,
+            coordenadasDaRota: treatedGeojsonCoords,
         });
     }
 
-    getGeojsonLastLatLng() {
-        const featuresLength = this.geojsonRoute.features.length - 1;
-        const geojsonLength = this.geojsonRoute.features[featuresLength].geometry.coordinates.length - 1;
+    getPrimeiraPosicaoRota() {
+        return [this.geojsonRota.features[0].geometry.coordinates[0][1], this.geojsonRota.features[0].geometry.coordinates[0][0]];
+    }
+
+    getUltimaPosicaoRota() {
+        const featuresLength = this.geojsonRota.features.length - 1;
+        const geojsonLength = this.geojsonRota.features[featuresLength].geometry.coordinates.length - 1;
 
         return [
-            this.geojsonRoute.features[featuresLength].geometry.coordinates[geojsonLength][1],
-            this.geojsonRoute.features[featuresLength].geometry.coordinates[geojsonLength][0],
+            this.geojsonRota.features[featuresLength].geometry.coordinates[geojsonLength][1],
+            this.geojsonRota.features[featuresLength].geometry.coordinates[geojsonLength][0],
         ];
     }
 
     getGeojsonCoords() {
-        const tratedCoords = turf.coordAll(this.geojsonRoute);
+        const tratedCoords = turf.coordAll(this.geojsonRota);
         return tratedCoords.map((coord) => ({
             latitude: coord[1],
             longitude: coord[0],
@@ -275,32 +296,38 @@ export class RotasPercorrerScreen extends React.Component {
     async startRouteFollow() {
         try {
             this.setState({
-                beginningDate: Date.now(),
+                dataInicio: Date.now(),
             });
-            if (this.hasBackgroundPermission) {
-                await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+            if (this.temPermissaoLocBackground) {
+                let taskRegistrada = await TaskManager.isTaskRegisteredAsync(LOCATION_BG_TASK);
+                if (taskRegistrada) {
+                    await TaskManager.unregisterAllTasksAsync(LOCATION_BG_TASK);
+                }
+
+                await Location.startLocationUpdatesAsync(LOCATION_BG_TASK, {
                     accuracy: Location.Accuracy.Highest,
                     timeInterval: 1000,
                     showsBackgroundLocationIndicator: true,
-                    foregroundService: {
+                    /*foregroundService: {
                         notificationTitle: "SETE Rota",
                         notificationBody: "Georeferenciando...",
                         notificationColor: "#FF7B00",
-                    },
+                    },*/
                 });
             } else {
-                this.clearWatchPosition = await Location.watchPositionAsync(
+                this.monitorPosicao = await Location.watchPositionAsync(
                     {
                         accuracy: Location.Accuracy.Highest,
                         timeInterval: 1000,
                         distanceInterval: 1,
                     },
                     ({ coords }) => {
+                        console.log("VOU MANDAR A LOC NO FRONT");
                         store.dispatch(locAtualizarPosicao([coords]));
                     }
                 );
             }
-            this.setState({ hasStartedRoute: true });
+            this.setState({ comecouRota: true });
         } catch (err) {
             Alert.alert("Atenção!", err.toString());
         }
@@ -308,13 +335,13 @@ export class RotasPercorrerScreen extends React.Component {
 
     async stopRouteFollow() {
         try {
-            if (this.hasBackgroundPermission) {
+            if (this.temPermissaoLocBackground) {
                 console.log("Chegou aqui ó");
-                await TaskManager.unregisterAllTasksAsync(LOCATION_TASK_NAME);
+                await TaskManager.unregisterAllTasksAsync(LOCATION_BG_TASK);
             } else {
-                await this.clearWatchPosition.remove();
+                await this.monitorPosicao.remove();
             }
-            const totalTime = (Date.now() - this.state.beginningDate) / 1000;
+            const totalTime = (Date.now() - this.state.dataInicio) / 1000;
             console.log("totalTime", totalTime);
 
             Alert.alert(
@@ -328,7 +355,7 @@ export class RotasPercorrerScreen extends React.Component {
                 }`
             );
             store.dispatch(locPararRastreamento());
-            this.setState({ hasStartedRoute: false });
+            this.setState({ comecouRota: false });
         } catch (err) {
             Alert.alert("Atenção!", err.toString());
         }
@@ -349,17 +376,17 @@ export class RotasPercorrerScreen extends React.Component {
     }
 
     render() {
-        const { locationTrackData, route } = this.props;
-        const { buttonGroupIsOppened, hasStartedRoute, problemsModalIsOpened } = this.state;
-        const { targetData } = route.params;
+        const { vetorPosicoes, route } = this.props;
+        const { buttonGroupIsOppened, comecouRota, problemsModalIsOpened } = this.state;
+        const { dadoAlvo } = route.params;
 
         let lastLat;
         let lastLon;
-        let locationLength = locationTrackData?.length;
+        let locationLength = vetorPosicoes?.length;
         if (locationLength > 0) {
             let i = locationLength - 1;
-            lastLat = locationTrackData[i].latitude;
-            lastLon = locationTrackData[i].longitude;
+            lastLat = vetorPosicoes[i].latitude;
+            lastLon = vetorPosicoes[i].longitude;
         }
 
         return (
@@ -367,7 +394,7 @@ export class RotasPercorrerScreen extends React.Component {
                 <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
                 <Appbar.Header style={styles.headerBar}>
                     <Appbar.BackAction onPress={() => this.props.navigation.goBack()} />
-                    <Appbar.Content title="SETE" subtitle={`Rota: ${targetData["NOME"]}, ${targetData["KM"]}km`} />
+                    <Appbar.Content title="SETE" subtitle={`Rota: ${dadoAlvo["NOME"]}, ${dadoAlvo["KM"]}km`} />
                 </Appbar.Header>
                 <View style={styles.container}>
                     <MapView
@@ -383,16 +410,16 @@ export class RotasPercorrerScreen extends React.Component {
                         showsCompass
                         showsScale
                     >
-                        <Polyline coordinates={locationTrackData} strokeColor="#a83291" strokeWidth={10} zIndex={10} />
-                        <Geojson geojson={this.geojsonRoute} strokeColor="orange" fillColor="white" strokeWidth={5} zIndex={1} />
-                        {locationTrackData.length > 0 ? (
+                        <Polyline coordinates={vetorPosicoes} strokeColor="white" strokeWidth={8} zIndex={10} />
+                        <Geojson geojson={this.geojsonRota} strokeColor="orange" fillColor="white" strokeWidth={10} zIndex={1} />
+                        {vetorPosicoes.length > 0 ? (
                             <Marker
                                 coordinate={{
                                     latitude: lastLat,
                                     longitude: lastLon,
                                 }}
                             >
-                                <Image source={this.routeIcon} style={{ width: 36, height: 36 }} resizeMode="contain" />
+                                <Image source={this.iconeVeiculo} style={{ width: 64, height: 64 }} resizeMode="contain" />
                             </Marker>
                         ) : null}
                     </MapView>
@@ -449,7 +476,7 @@ export class RotasPercorrerScreen extends React.Component {
                             />
                         </FormView>
                     </Modal>
-                    {!hasStartedRoute ? (
+                    {!comecouRota ? (
                         <View style={styles.startButtonContainer}>
                             <FAB
                                 icon="navigation"
@@ -492,6 +519,7 @@ export class RotasPercorrerScreen extends React.Component {
     }
 }
 
+// Mapeamento redux
 const mapDispatchProps = (dispatch) =>
     bindActionCreators(
         {
@@ -505,10 +533,12 @@ const mapDispatchProps = (dispatch) =>
     );
 
 const mapStateToProps = (store) => ({
-    locationTrackData: store.locState.locationTrackData,
-    finishedOperation: store.dbState.finishedOperation,
-    errorOcurred: store.dbState.errorOcurred,
-    dbData: store.dbState.data,
+    vetorPosicoes: store.localizacao.vetorPosicoes,
+    terminouOperacao: store.db.terminouOperacao,
+    terminouOperacaoNaInternet: store.db.terminouOperacaoNaInternet,
+    terminouOperacaoNoCache: store.db.terminouOperacaoNoCache,
+    terminouOperacaoComErro: store.db.terminouOperacaoComErro,
+    db: store.db.dados,
 });
 
 export default connect(mapStateToProps, mapDispatchProps)(withTheme(RotasPercorrerScreen));

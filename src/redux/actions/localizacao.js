@@ -23,16 +23,24 @@ export function locComecarRastreamento() {
 
 export function locAtualizarPosicao(localizacoes) {
     return (dispatch) => {
-        localizacoes.forEach((loc) => vetorPosicoes.push(loc));
+        try {
+            if (localizacoes != null && localizacoes != undefined && vetorPosicoes != null && vetorPosicoes != undefined) {
+                localizacoes.forEach((loc) => vetorPosicoes.push(loc));
 
-        let novasPosicoes = [...vetorPosicoes];
-        status = LOCALIZACAO_RASTREAMENTO_NOVAPOSICAO;
+                let novasPosicoes = [...vetorPosicoes];
+                status = LOCALIZACAO_RASTREAMENTO_NOVAPOSICAO;
 
-        dispatch({
-            type: LOCALIZACAO_RASTREAMENTO_NOVAPOSICAO,
-            vetorPosicoes: novasPosicoes,
-            status,
-        });
+                dispatch({
+                    type: LOCALIZACAO_RASTREAMENTO_NOVAPOSICAO,
+                    vetorPosicoes: novasPosicoes,
+                    status,
+                });
+            } else {
+                console.log("DEU PAU, NÃO DEVERIA");
+            }
+        } catch (error) {
+            console.log("FATAL ERROR", error);
+        }
     };
 }
 

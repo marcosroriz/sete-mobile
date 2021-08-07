@@ -24,7 +24,7 @@ export const localizacao = (estado = estadoInicial, acao) => {
         console.log("UPDATE", acao);
         return {
             ...estado,
-            vetorPosicoes: [...acao.data],
+            vetorPosicoes: [...acao.vetorPosicoes],
             status: LOCALIZACAO_RASTREAMENTO_NOVAPOSICAO,
         };
     } else if (acao.type == LOCALIZACAO_RASTREAMENTO_TERMINAR) {
@@ -32,7 +32,7 @@ export const localizacao = (estado = estadoInicial, acao) => {
         console.log("END", acao);
         return {
             ...estado,
-            vetorPosicoes: acao.data,
+            vetorPosicoes: acao.vetorPosicoes,
             status: LOCALIZACAO_RASTREAMENTO_TERMINAR,
         };
     } else {
