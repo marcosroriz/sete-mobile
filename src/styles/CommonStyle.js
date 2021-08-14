@@ -37,6 +37,34 @@ export default StyleSheet.create({
         height: 50,
     },
 
+    // Buttons
+    midButton: {
+        marginTop: 40,
+        marginLeft: 20,
+        marginRight: 20,
+        width: "40%",
+        padding: 10,
+        fontSize: 30,
+    },
+
+    midCancelButton: {
+        marginTop: 40,
+        marginLeft: 20,
+        marginRight: 20,
+        width: "40%",
+        padding: 10,
+        fontSize: 30,
+    },
+
+    midSubmitButton: {
+        marginTop: 40,
+        marginLeft: 20,
+        marginRight: 20,
+        width: "40%",
+        padding: 10,
+        fontSize: 30,
+    },
+
     // Floating buttons
     fabCancel: {
         backgroundColor: "red",

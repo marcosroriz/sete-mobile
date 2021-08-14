@@ -48,6 +48,8 @@ const DB_TABELAS = [
     "rotapassaporescolas",
     "rotapossuiveiculo",
     "veiculos",
+    "viagenspercurso",
+    "viagensalertas",
 ];
 
 // Nome da coleção raiz que armazena os dados no firebase
@@ -77,20 +79,23 @@ function __dbAcessarDados(codCidade, nomeColecao) {
  */
 function __expandeBaseDados(operacoes) {
     operacoes.forEach(({ collection, id, payload }) => {
-        console.log("--------------------------------------");
-        console.log("COLLECTION", collection);
-        console.log("ID", id);
-        console.log("ANTES");
+        // console.log("--------------------------------------");
+        // console.log("COLLECTION", collection);
+        // console.log("ID", id);
+        // console.log("ANTES");
         let dataIndex = dbSnapshot[collection].findIndex((obj) => obj.ID == id);
-        console.log(dbSnapshot[collection][dataIndex]);
-        console.log("-------");
-        console.log("DEPOIS");
+        // console.log(dbSnapshot[collection][dataIndex]);
+        // console.log("-------");
+        // console.log("DEPOIS");
         if (id != "" || id != undefined || (id != null && dbSnapshot)) {
-            dbSnapshot[collection][dataIndex] = {
-                ...dbSnapshot[collection][dataIndex],
-                ...payload,
-            };
-            console.log(dbSnapshot[collection][dataIndex]);
+            if (dbSnapshot[collection][dataIndex]) {
+                dbSnapshot[collection][dataIndex] = {
+                    ...dbSnapshot[collection][dataIndex],
+                    ...payload,
+                };
+            } else {
+                dbSnapshot[collection][dataIndex] = payload;
+            }
         }
     });
 }
@@ -209,9 +214,10 @@ export function dbEnviaOperacoesPendentes() {
  * As operações podem ser enviadas para Internet ou serem cacheadas.
  * Caso ocorra algum erro, a ação notifica a APP
  *
- * @param {Array<Object>} operacoes
+ * @param {Array<Object>} operacoes as operações a serem salvas
+ * @param {Boolean} atualizaDataServidor se devemos ou não forçar o envio de uma nova data de atualização ao servidor ao salvar os dados
  */
-export function dbSalvar(operacoes) {
+export function dbSalvar(operacoes, atualizaDataServidor = true) {
     return (dispatch, getState) => {
         // Vamos verificar se o usuário está conectado a Internet
         let estaConectado = getState().usuario.estaConectadoInternet;
@@ -235,7 +241,11 @@ export function dbSalvar(operacoes) {
             let codCidade = getState().usuario.usuarioAtual["COD_CIDADE"];
 
             // Nova data para a última modificação
-            let novaDataUltimoUpdate = new Date().toJSON();
+            // Assume que é a última data, a não ser que tenhamos que atualizar
+            let novaDataUltimoUpdate = dataUltimoUpdate;
+            if (atualizaDataServidor) {
+                novaDataUltimoUpdate = new Date().toJSON();
+            }
 
             // Promessas que vamos executar aqui no firebase
             let promisses = __preparaEnvioDados(codCidade, operacoes, novaDataUltimoUpdate);

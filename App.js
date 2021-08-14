@@ -91,6 +91,7 @@ const firebaseConfig = {
 };
 if (firebase.apps.length === 0) {
     firebase.initializeApp(firebaseConfig);
+    firebase.firestore().settings({ experimentalForceLongPolling: true });
 }
 firebase.auth().signOut();
 // firebase.firestore().enablePersistence()
