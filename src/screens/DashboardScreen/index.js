@@ -191,7 +191,62 @@ export class DashboardScreen extends Component {
                                     left={(props) => <List.Icon {...props} icon="clipboard-text" style={{ leftMargin: 10 }} />}
                                     onPress={() => this.props.navigation.navigate("VisaoGeralScreen")}
                                 />
-                                <List.Accordion title="Alunos" left={(props) => <List.Icon {...props} icon="face" />}>
+                                <List.Item
+                                    title="Georeferenciar Aluno"
+                                    left={(props) => <List.Icon {...props} icon="map-marker-plus" style={{ leftMargin: 10 }} />}
+                                    onPress={() =>
+                                        this.props.navigation.navigate("ListarEntidadeScreen", {
+                                            subtitulo: "Alunos",
+                                            dadoAlvo: "alunos",
+                                            descricaoTela: "Selecione um aluno",
+                                            campoUsarComoID: "ID",
+                                            campoUsarComoValor: "NOME",
+                                            estaEditando: true,
+                                            telaAlvo: "AlunosGeoreferenciarScreen",
+                                        })
+                                    }
+                                />
+                                <List.Item
+                                    title="Lista de Alunos"
+                                    left={(props) => <List.Icon {...props} icon="face" style={{ leftMargin: 10 }} />}
+                                    onPress={() =>
+                                        this.props.navigation.navigate("ListarEntidadeScreen", {
+                                            subtitulo: "Alunos",
+                                            dadoAlvo: "alunos",
+                                            descricaoTela: "Selecione um aluno",
+                                            campoUsarComoID: "ID",
+                                            campoUsarComoValor: "NOME",
+                                            estaEditando: true,
+                                            telaAlvo: "AlunosEdicaoScreen",
+                                        })
+                                    }
+                                />
+                                <List.Item
+                                    title="Mapa de Alunos"
+                                    left={(props) => <List.Icon {...props} icon="map" style={{ leftMargin: 10 }} />}
+                                    onPress={() => this.props.navigation.navigate("AlunosMapScreen")}
+                                />
+                                <List.Item
+                                    title="Realizar Viagem"
+                                    left={(props) => <List.Icon {...props} icon="map-marker-path" style={{ leftMargin: 10 }} />}
+                                    onPress={() =>
+                                        this.props.navigation.navigate("ListarEntidadeScreen", {
+                                            subtitulo: "Escolha uma rota",
+                                            dadoAlvo: "rotas",
+                                            descricaoTela: "Rotas Cadastradas",
+                                            campoUsarComoID: "ID",
+                                            campoUsarComoValor: "NOME",
+                                            estaEditando: true,
+                                            telaAlvo: "RotasPercorrerScreen",
+                                        })
+                                    }
+                                />
+                                <List.Item
+                                    title="Traçar Nova Rota (GPS)"
+                                    left={(props) => <List.Icon {...props} icon="crosshairs-gps" style={{ leftMargin: 10 }} />}
+                                    onPress={() => this.props.navigation.navigate("RotasTracarScreen")}
+                                />
+                                {/* <List.Accordion title="Alunos" left={(props) => <List.Icon {...props} icon="face" />}>
                                     <List.Item title="Estatistica" onPress={() => this.props.navigation.navigate("AlunosEstatisticaScreen")} />
                                     <List.Item
                                         title="Georeferenciar Aluno"
@@ -259,7 +314,7 @@ export class DashboardScreen extends Component {
                                             })
                                         }
                                     />
-                                </List.Accordion>
+                                </List.Accordion> */}
                             </List.Section>
                         </ScrollView>
 

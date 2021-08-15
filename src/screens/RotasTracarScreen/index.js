@@ -1,26 +1,36 @@
 // Basic React Imports
-import React, { Component } from "react"
+import React, { Component } from "react";
 
 // Redux Store
-import { connect } from "react-redux"
-import { bindActionCreators } from "redux"
-import { dbClearAction, dbSaveAction } from "../../redux/actions/db"
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import { dbLimparAcoes, dbSalvar } from "../../redux/actions/db";
 
 // Basic Widgets
 import { Alert, Image, ScrollView, View } from "react-native";
 import {
-    ActivityIndicator, Appbar, Banner, Button, Checkbox, Colors, IconButton,
-    Text, TextInput, Provider as PaperProvider, RadioButton, Paragraph
-} from 'react-native-paper';
-import { withTheme } from 'react-native-paper';
+    ActivityIndicator,
+    Appbar,
+    Banner,
+    Button,
+    Checkbox,
+    Colors,
+    IconButton,
+    Text,
+    TextInput,
+    Provider as PaperProvider,
+    RadioButton,
+    Paragraph,
+} from "react-native-paper";
+import { withTheme } from "react-native-paper";
 
 // Swipe Widgets
-import { MaterialIcons } from '@expo/vector-icons';
-import StepIndicator from 'react-native-step-indicator';
-import Swiper from 'react-native-swiper';
+import { MaterialIcons } from "@expo/vector-icons";
+import StepIndicator from "react-native-step-indicator";
+import Swiper from "react-native-swiper";
 
 // Step config
-import * as StepConfig from './stepconfig';
+import * as StepConfig from "./stepconfig";
 
 // Style
 import styles from "./style";
@@ -33,8 +43,8 @@ const iconeBarco = require("../../../assets/barco.png");
 import MapView, { Geojson, Marker } from "react-native-maps";
 
 // GPS
-import * as Location from 'expo-location';
-import { length, projection } from '@turf/turf';
+import * as Location from "expo-location";
+import { length, projection } from "@turf/turf";
 import createGpx from "gps-to-gpx";
 import simplify from "simplify-geojson";
 
@@ -42,7 +52,7 @@ import simplify from "simplify-geojson";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
 
-class GenerateRouteScreen extends Component {
+class RotasTracarScreen extends Component {
     state = {
         // Tela atual
         currentScreen: 0,
@@ -76,19 +86,18 @@ class GenerateRouteScreen extends Component {
         gpxString: "",
         gpxFile: FileSystem.documentDirectory,
 
-        // Botões e ações para salvar 
+        // Botões e ações para salvar
         buttonStart: false,
         buttonStop: false,
 
         // Dialogos
-        showInfoBanner: true
+        showInfoBanner: true,
     };
 
-
     componentDidMount() {
-        this.props.dbClearAction();
+        this.props.dbLimparAcoes();
 
-        Location.installWebGeolocationPolyfill()
+        Location.installWebGeolocationPolyfill();
 
         navigator.geolocation.getCurrentPosition(
             (params) => {
@@ -155,23 +164,18 @@ class GenerateRouteScreen extends Component {
     }
 
     async handleStopRecordingPress() {
-        Alert.alert(
-            "Terminar o rastreamento?",
-            "Você tem certeza que deseja terminar de rastrear a rota?",
-            [
-                { text: "Não, voltar a rastrear", onPress: () => this.finishSaveDialog(false), style: "cancel" },
-                { text: "Sim, terminar", onPress: () => this.finishSaveDialog(true) }
-            ]
-        );
+        Alert.alert("Terminar o rastreamento?", "Você tem certeza que deseja terminar de rastrear a rota?", [
+            { text: "Não, voltar a rastrear", onPress: () => this.finishSaveDialog(false), style: "cancel" },
+            { text: "Sim, terminar", onPress: () => this.finishSaveDialog(true) },
+        ]);
     }
 
     async finishSaveDialog(shouldFinish) {
         if (shouldFinish) {
-            if (this.state.watch_id)
-                navigator.geolocation.clearWatch(this.state.watch_id);
+            if (this.state.watch_id) navigator.geolocation.clearWatch(this.state.watch_id);
 
             let gpxString = await createGpx(this.state.walkedCoordsGps);
-            console.log("GPX", gpxString)
+            console.log("GPX", gpxString);
 
             let geoJSON = {
                 type: "FeatureCollection",
@@ -181,56 +185,51 @@ class GenerateRouteScreen extends Component {
                         properties: { name: this.state.nomeRota },
                         geometry: {
                             type: "LineString",
-                            coordinates: this.state.walkedCoordsGps.map(
-                                ({ latitude, longitude }) => [
-                                    longitude,
-                                    latitude,
-                                ]
-                            ),
+                            coordinates: this.state.walkedCoordsGps.map(({ latitude, longitude }) => [longitude, latitude]),
                         },
                     },
                 ],
-            }
+            };
 
-            let geoJSONSimplificado = simplify(geoJSON, 0.00001)
+            let geoJSONSimplificado = simplify(geoJSON, 0.00001);
             let geoJSONConvertido = projection.toMercator(geoJSONSimplificado);
-            let geoJSONKM = length(geoJSON.features[0]).toFixed(2).toString()
-            console.log("GEOJSON CONVERTIDO", geoJSONConvertido)
+            let geoJSONKM = length(geoJSON.features[0]).toFixed(2).toString();
+            console.log("GEOJSON CONVERTIDO", geoJSONConvertido);
 
             let payloadRota = {
-                "TIPO": this.state.tipoRota,
-                "NOME": this.state.nomeRota,
-                "SHAPE": JSON.stringify(geoJSONConvertido),
-                "TURNO_MATUTINO": this.state.funcionaManha,
-                "TURNO_VESPERTINO": this.state.funcionaTarde,
-                "TURNO_NOTURNO": this.state.funcionaNoite,
-                "KM": geoJSONKM,
-                "TEMPO": "0",
+                TIPO: this.state.tipoRota,
+                NOME: this.state.nomeRota,
+                SHAPE: JSON.stringify(geoJSONConvertido),
+                TURNO_MATUTINO: this.state.funcionaManha,
+                TURNO_VESPERTINO: this.state.funcionaTarde,
+                TURNO_NOTURNO: this.state.funcionaNoite,
+                KM: geoJSONKM,
+                TEMPO: "0",
 
                 // Dados opcionais
-                "HORA_IDA_INICIO": "",
-                "HORA_IDA_TERMINO": "",
-                "HORA_VOLTA_INICIO": "",
-                "HORA_VOLTA_TERMINO": "",
-                "DA_PORTEIRA": false,
-                "DA_MATABURRO": false,
-                "DA_COLCHETE": false,
-                "DA_ATOLEIRO": false,
-                "DA_PONTERUSTICA": false,
-                "GPX": gpxString
-            }
+                HORA_IDA_INICIO: "",
+                HORA_IDA_TERMINO: "",
+                HORA_VOLTA_INICIO: "",
+                HORA_VOLTA_TERMINO: "",
+                DA_PORTEIRA: false,
+                DA_MATABURRO: false,
+                DA_COLCHETE: false,
+                DA_ATOLEIRO: false,
+                DA_PONTERUSTICA: false,
+                GPX: gpxString,
+            };
             this.setState({
                 watch_id: null,
                 gpxString,
-                geoJSON
+                geoJSON,
             });
 
-            this.props.dbSaveAction([
+            this.props.dbSalvar([
                 {
-                    operation: "rotas",
+                    collection: "rotas",
                     id: this.state.nomeRota,
-                    payload: payloadRota
-                }
+                    payload: payloadRota,
+                },
             ]);
             await this.handleExportRoutePress();
             this.onStepPress(2);
@@ -250,23 +249,20 @@ class GenerateRouteScreen extends Component {
         }
     }
 
-
     renderStepIndicator = (params) => {
-        return (
-            <MaterialIcons {...StepConfig.getStepIcon(params)} />
-        )
+        return <MaterialIcons {...StepConfig.getStepIcon(params)} />;
     };
 
     onStepPress = (position) => {
         const currentIndex = this.swipe.state.index;
         const offset = position - currentIndex;
 
-        console.log("CURRENT INDEX", currentIndex)
-        console.log("POSITION", position)
-        console.log("OFFSET", offset)
+        console.log("CURRENT INDEX", currentIndex);
+        console.log("POSITION", position);
+        console.log("OFFSET", offset);
 
         if (currentIndex == 0) {
-            let [canGo, errorMessage] = this.isBasicInformationSupplied()
+            let [canGo, errorMessage] = this.isBasicInformationSupplied();
             if (canGo) {
                 const { tipoRota } = this.state;
                 let icone = tipoRota == "2" ? iconeBarco : iconeOnibus;
@@ -275,7 +271,7 @@ class GenerateRouteScreen extends Component {
                     // showInfoBanner: false,
                     markerIcon: icone,
                     // currentScreen: position
-                })
+                });
                 this.swipe.scrollBy(offset);
             } else {
                 Alert.alert("Erro", errorMessage, [{ text: "OK" }]);
@@ -289,10 +285,9 @@ class GenerateRouteScreen extends Component {
         }
     };
 
-
     isBasicInformationSupplied() {
         const { tipoRota, nomeRota, funcionaManha, funcionaTarde, funcionaNoite } = this.state;
-        console.log("CURRENT SCREEN DEPOIS", this.state.currentScreen)
+        console.log("CURRENT SCREEN DEPOIS", this.state.currentScreen);
 
         let canGo = true;
         let errorMessage = "";
@@ -308,11 +303,11 @@ class GenerateRouteScreen extends Component {
             errorMessage = "Por favor, escolha pelo menos um turno de funcionamento para a rota";
         }
 
-        return [canGo, errorMessage]
+        return [canGo, errorMessage];
     }
 
     goToTrackingPage = () => {
-        let [canGo, errorMessage] = this.isBasicInformationSupplied()
+        let [canGo, errorMessage] = this.isBasicInformationSupplied();
 
         if (canGo) {
             const { tipoRota } = this.state;
@@ -320,27 +315,22 @@ class GenerateRouteScreen extends Component {
 
             this.setState({
                 showInfoBanner: false,
-                markerIcon: icone
-            })
+                markerIcon: icone,
+            });
             // this.onStepPress(1)
             this.swipe.scrollBy(1);
         } else {
             Alert.alert("Erro", errorMessage, [{ text: "OK" }]);
         }
-    }
+    };
 
     render() {
         const { currentScreen, showInfoBanner } = this.state;
         return (
             <PaperProvider theme={this.props.theme}>
                 <Appbar.Header style={styles.headerBar}>
-                    <Appbar.BackAction
-                        onPress={() => this.props.navigation.push("DashboardScreen")}
-                    />
-                    <Appbar.Content
-                        title="SETE"
-                        subtitle="Gerar Rota usando o GPS"
-                    />
+                    <Appbar.BackAction onPress={() => this.props.navigation.push("DashboardScreen")} />
+                    <Appbar.Content title="SETE" subtitle="Gerar Rota usando o GPS" />
                 </Appbar.Header>
                 <View style={styles.container}>
                     <View style={styles.stepIndicator}>
@@ -350,28 +340,34 @@ class GenerateRouteScreen extends Component {
                             currentPosition={currentScreen}
                             onPress={this.onStepPress}
                             renderStepIndicator={this.renderStepIndicator}
-                            labels={['Descrição', 'Rastreamento', 'Salvar']}
+                            labels={["Descrição", "Rastreamento", "Salvar"]}
                         />
                     </View>
                     <Banner
                         style={styles.bannerStyle}
                         visible={showInfoBanner}
-                        actions={[{
-                            label: 'Esconder dica',
-                            onPress: () => this.setState({ showInfoBanner: false })
-                        }]}
+                        actions={[
+                            {
+                                label: "Esconder dica",
+                                onPress: () => this.setState({ showInfoBanner: false }),
+                            },
+                        ]}
                     >
                         Informe os dados básicos da rota. Não se preocupe, você poderá alterá-los posteriormente.
                     </Banner>
                     <Swiper
                         style={{ flexGrow: 1 }}
                         loop={false}
-                        ref={(swipe) => { this.swipe = swipe; }}
+                        ref={(swipe) => {
+                            this.swipe = swipe;
+                        }}
                         index={currentScreen}
                         autoplay={false}
                         showsPagination={false}
                         scrollEnabled={false}
-                        onIndexChanged={(page) => { this.setState({ currentScreen: page }) }}
+                        onIndexChanged={(page) => {
+                            this.setState({ currentScreen: page });
+                        }}
                         removeClippedSubviews={false}
                     >
                         {this.basicInputScreen()}
@@ -382,7 +378,6 @@ class GenerateRouteScreen extends Component {
             </PaperProvider>
         );
     }
-
 
     basicInputScreen() {
         return (
@@ -396,74 +391,54 @@ class GenerateRouteScreen extends Component {
                         returnKeyType="next"
                         mode="outlined"
                         value={this.state.nomeRota}
-                        onChangeText={nomeRota => this.setState({ nomeRota })}
+                        onChangeText={(nomeRota) => this.setState({ nomeRota })}
                     />
 
                     <View style={styles.inputWrapper}>
-                        <Text style={styles.labelPicker}>
-                            Selecione o tipo da rota:
-                        </Text>
-                        <RadioButton.Group
-                            onValueChange={value => this.setState({ tipoRota: value })}
-                            value={this.state.tipoRota}
-                            uncheckedColor="red"
-                        >
-                            <RadioButton.Item
-                                mode="android"
-                                label="Rodoviário"
-                                value="1"
-                                color={this.props.theme.colors.primary}
-                                uncheckedColor="gray"
-                            />
-                            <RadioButton.Item
-                                mode="android"
-                                label="Aquaviário"
-                                value="2"
-                                color={this.props.theme.colors.primary}
-                                uncheckedColor="gray" />
-                            <RadioButton.Item
-                                mode="android"
-                                label="Mista"
-                                value="3"
-                                color={this.props.theme.colors.primary}
-                                uncheckedColor="gray" />
+                        <Text style={styles.labelPicker}>Selecione o tipo da rota:</Text>
+                        <RadioButton.Group onValueChange={(value) => this.setState({ tipoRota: value })} value={this.state.tipoRota} uncheckedColor="red">
+                            <RadioButton.Item mode="android" label="Rodoviário" value="1" color={this.props.theme.colors.primary} uncheckedColor="gray" />
+                            <RadioButton.Item mode="android" label="Aquaviário" value="2" color={this.props.theme.colors.primary} uncheckedColor="gray" />
+                            <RadioButton.Item mode="android" label="Mista" value="3" color={this.props.theme.colors.primary} uncheckedColor="gray" />
                         </RadioButton.Group>
                     </View>
 
                     <View style={styles.inputWrapper}>
-                        <Text style={styles.labelPicker}>
-                            Marque o horário de funcionamento:
-                        </Text>
+                        <Text style={styles.labelPicker}>Marque o horário de funcionamento:</Text>
                         <Checkbox.Item
                             mode="android"
                             label="Manhã"
-                            status={this.state.funcionaManha ? 'checked' : 'unchecked'}
+                            status={this.state.funcionaManha ? "checked" : "unchecked"}
                             color={this.props.theme.colors.primary}
-                            onPress={() => { this.setState({ funcionaManha: !this.state.funcionaManha }) }}
+                            onPress={() => {
+                                this.setState({ funcionaManha: !this.state.funcionaManha });
+                            }}
                         />
                         <Checkbox.Item
                             mode="android"
                             label="Tarde"
                             color={this.props.theme.colors.primary}
-                            status={this.state.funcionaTarde ? 'checked' : 'unchecked'}
-                            onPress={() => { this.setState({ funcionaTarde: !this.state.funcionaTarde }) }}
+                            status={this.state.funcionaTarde ? "checked" : "unchecked"}
+                            onPress={() => {
+                                this.setState({ funcionaTarde: !this.state.funcionaTarde });
+                            }}
                         />
                         <Checkbox.Item
                             mode="android"
                             label="Noite"
                             color={this.props.theme.colors.primary}
-                            status={this.state.funcionaNoite ? 'checked' : 'unchecked'}
-                            onPress={() => { this.setState({ funcionaNoite: !this.state.funcionaNoite }) }}
+                            status={this.state.funcionaNoite ? "checked" : "unchecked"}
+                            onPress={() => {
+                                this.setState({ funcionaNoite: !this.state.funcionaNoite });
+                            }}
                         />
                     </View>
-                    <Button style={styles.buttonProx}
-                        mode="contained"
-                        onPress={() => this.goToTrackingPage()}>
+                    <Button style={styles.buttonProx} mode="contained" onPress={() => this.goToTrackingPage()}>
                         Ir para o rastreamento
                     </Button>
                 </View>
-            </ScrollView >
-        )
+            </ScrollView>
+        );
     }
 
     routeScreen() {
@@ -481,11 +456,7 @@ class GenerateRouteScreen extends Component {
                         showsScale
                     >
                         <Marker coordinate={this.state.region}>
-                            <Image
-                                source={this.state.markerIcon}
-                                style={{ width: 36, height: 36 }}
-                                resizeMode="contain"
-                            />
+                            <Image source={this.state.markerIcon} style={{ width: 36, height: 36 }} resizeMode="contain" />
                         </Marker>
 
                         <Geojson
@@ -497,12 +468,7 @@ class GenerateRouteScreen extends Component {
                                         properties: {},
                                         geometry: {
                                             type: "LineString",
-                                            coordinates: this.state.walkedCoordsGps.map(
-                                                ({ latitude, longitude }) => [
-                                                    longitude,
-                                                    latitude,
-                                                ]
-                                            ),
+                                            coordinates: this.state.walkedCoordsGps.map(({ latitude, longitude }) => [longitude, latitude]),
                                         },
                                     },
                                 ],
@@ -514,101 +480,66 @@ class GenerateRouteScreen extends Component {
                     </MapView>
                 </View>
                 <View style={styles.buttonContainer}>
-                    {!this.state.buttonStart ?
-                        (
-                            <Button
-                                onPress={() => this.handleRecordRoutePress()}
-                                mode="contained"
-                                compact
-                            >
-                                Começar a rastrear
-                            </Button>
-                        ) :
-                        (
-                            <Button
-                                onPress={async () => await this.handleStopRecordingPress()}
-                                mode="contained"
-                                compact
-                            >
-                                Parar de rastrear
-                            </Button>
-                        )
-                    }
+                    {!this.state.buttonStart ? (
+                        <Button onPress={() => this.handleRecordRoutePress()} mode="contained" compact>
+                            Começar a rastrear
+                        </Button>
+                    ) : (
+                        <Button onPress={async () => await this.handleStopRecordingPress()} mode="contained" compact>
+                            Parar de rastrear
+                        </Button>
+                    )}
                 </View>
             </View>
-        )
+        );
     }
 
     saveScreen() {
-        const { finishedOperation, errorOcurred } = this.props;
+        const { terminouOperacao, terminouOperacaoComErro } = this.props;
 
-        if (!finishedOperation) {
+        if (!terminouOperacao) {
             return (
                 <View style={styles.infoContainer}>
-                    <ActivityIndicator animating={true} color={Colors.orange500} size={100}
-                        style={styles.loadingIndicator} />
-                    <Text style={styles.loadingHeadlineBold}>
-                        Aguarde um minutinho...
-                    </Text>
-                    <Text style={styles.infoText}>
-                        Enviando os dados da rota para o sistema SETE
-                    </Text>
+                    <ActivityIndicator animating={true} color={Colors.orange500} size={100} style={styles.loadingIndicator} />
+                    <Text style={styles.loadingHeadlineBold}>Aguarde um minutinho...</Text>
+                    <Text style={styles.infoText}>Enviando os dados da rota para o sistema SETE</Text>
                 </View>
-            )
+            );
         } else {
-            if (errorOcurred) {
+            if (terminouOperacaoComErro) {
                 return (
                     <View style={styles.infoContainer}>
-                        <IconButton
-                            icon="close"
-                            color={Colors.red500}
-                            size={100}
-                        />
-                        <Text style={styles.infoHeadlineBold}>
-                            Ocorreu um erro ao salvar a rota
-                        </Text>
+                        <IconButton icon="close" color={Colors.red500} size={100} />
+                        <Text style={styles.infoHeadlineBold}>Ocorreu um erro ao salvar a rota</Text>
                         <Paragraph style={styles.infoText}>
-                            Apesar de ter ocorrido um erro, o aplicativo também salva a rota traçada como um arquivo GPX no seu celular.
-                            Para salvar o arquivo, basta clicar no botão abaixo e encaminhar para o seu e-mail. Posteriormente, importe o arquivo no sistema SETE desktop.
+                            Apesar de ter ocorrido um erro, o aplicativo também salva a rota traçada como um arquivo GPX no seu celular. Para salvar o arquivo,
+                            basta clicar no botão abaixo e encaminhar para o seu e-mail. Posteriormente, importe o arquivo no sistema SETE desktop.
                         </Paragraph>
-                        <Button style={styles.buttonProx}
-                            mode="contained"
-                            onPress={() => Sharing.shareAsync(this.state.gpxFile)}>
+                        <Button style={styles.buttonProx} mode="contained" onPress={() => Sharing.shareAsync(this.state.gpxFile)}>
                             Salvar o arquivo da rota
                         </Button>
                     </View>
-                )
+                );
             } else {
                 return (
                     <View style={styles.infoContainer}>
-                        <IconButton
-                            icon="check-bold"
-                            color={Colors.green500}
-                            size={100}
-                        />
-                        <Text style={styles.infoHeadlineBold}>
-                            Dados enviados com sucesso!
-                        </Text>
-                        <Button style={styles.buttonProx}
-                            mode="contained"
-                            onPress={() => this.props.navigation.goBack()}>
+                        <IconButton icon="check-bold" color={Colors.green500} size={100} />
+                        <Text style={styles.infoHeadlineBold}>Dados enviados com sucesso!</Text>
+                        <Button style={styles.buttonProx} mode="contained" onPress={() => this.props.navigation.goBack()}>
                             Retornar ao painel
                         </Button>
                     </View>
-                )
+                );
             }
         }
     }
 }
 
-const mapDispatchProps = (dispatch) => bindActionCreators(
-    { dbClearAction: dbClearAction, dbSaveAction: dbSaveAction },
-    dispatch
-)
+const mapDispatchProps = (dispatch) => bindActionCreators({ dbLimparAcoes, dbSalvar: dbSalvar }, dispatch);
 
 const mapStateToProps = (store) => ({
-    finishedOperation: store.dbState.finishedOperation,
-    errorOcurred: store.dbState.errorOcurred,
-})
+    terminouOperacao: store.db.terminouOperacao,
+    terminouOperacaoComErro: store.db.terminouOperacaoComErro,
+});
 
-export default connect(mapStateToProps, mapDispatchProps)(withTheme(GenerateRouteScreen))
+export default connect(mapStateToProps, mapDispatchProps)(withTheme(RotasTracarScreen));
