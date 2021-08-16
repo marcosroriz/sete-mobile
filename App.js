@@ -33,12 +33,12 @@ import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./src/store/Store";
 import { bindActionCreators } from "redux";
 
-(async () => {
-    await persistor.purge();
-    await persistor.flush();
-    await persistor.persist();
-    console.log("TERMINOU PURGE");
-})();
+// (async () => {
+//     await persistor.purge();
+//     await persistor.flush();
+//     await persistor.persist();
+//     console.log("TERMINOU PURGE");
+// })();
 
 // Firebase
 import * as firebase from "firebase";
@@ -53,10 +53,10 @@ import AlunosEstatisticaScreen from "./src/screens/AlunosEstatisticaScreen";
 import AlunosGeoreferenciarScreen from "./src/screens/AlunosGeoreferenciarScreen";
 import AlunosMapScreen from "./src/screens/AlunosMapScreen";
 import DashboardScreen from "./src/screens/DashboardScreen";
-import GenerateRouteScreen from "./src/screens/GenerateRouteScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import ListarEntidadeScreen from "./src/screens/ListarEntidadeScreen";
 import RotasPercorrerScreen from "./src/screens/RotasPercorrerScreen";
+import RotasTracarScreen from "./src/screens/RotasTracarScreen";
 import VisaoGeralScreen from "./src/screens/VisaoGeralScreen";
 
 // Tema
@@ -165,11 +165,10 @@ export class App extends Component {
                                 <Stack.Screen name="AlunosEdicaoScreen" component={AlunosEdicaoScreen} options={{ headerShown: false }} />
                                 <Stack.Screen name="AlunosEstatisticaScreen" component={AlunosEstatisticaScreen} options={{ headerShown: false }} />
                                 <Stack.Screen name="AlunosGeoreferenciarScreen" component={AlunosGeoreferenciarScreen} options={{ headerShown: false }} />
-
                                 <Stack.Screen name="AlunosMapScreen" component={AlunosMapScreen} options={{ headerShown: false }} />
-                                <Stack.Screen name="GenerateRouteScreen" component={GenerateRouteScreen} options={{ headerShown: false }} />
                                 <Stack.Screen name="ListarEntidadeScreen" component={ListarEntidadeScreen} options={{ headerShown: false }} />
                                 <Stack.Screen name="RotasPercorrerScreen" component={RotasPercorrerScreen} options={{ headerShown: false }} />
+                                <Stack.Screen name="RotasTracarScreen" component={RotasTracarScreen} options={{ headerShown: false }} />
                             </Stack.Navigator>
                         ) : (
                             <Stack.Navigator initialRouteName="LoginScreen">

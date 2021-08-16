@@ -445,7 +445,7 @@ export class RotasPercorrerScreen extends React.Component {
                     showsBackgroundLocationIndicator: true,
                     foregroundService: {
                         notificationTitle: "SETE Rota",
-                        notificationBody: "Georeferenciando...",
+                        notificationBody: "Monitorando GPS...",
                         notificationColor: "#FF7B00",
                     },
                 });
