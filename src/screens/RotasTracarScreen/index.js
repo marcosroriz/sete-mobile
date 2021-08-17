@@ -115,9 +115,9 @@ class RotasTracarScreen extends Component {
                 console.error(err);
             },
             {
-                timeout: 1000,
+                timeout: 5000,
                 enableHighAccuracy: true,
-                maximumAge: 1000,
+                maximumAge: 5000,
             }
         );
     }

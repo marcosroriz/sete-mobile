@@ -96,6 +96,7 @@ function processaDadosAlerta(alerta) {
             collection: "viagensalertas",
             payload: {
                 VIAGEM_ID: rotaDados.ID,
+                DATA: alerta.data.split("T")[0],
                 DATA_OCORRENCIA: alerta.data,
                 TIPO_ALERTA: alerta.tipo,
                 MENSAGEM: alerta.msgProblema,
@@ -113,6 +114,7 @@ function processaDadosAlerta(alerta) {
 
 export class RotasPercorrerScreen extends React.Component {
     // Rota
+    idRota = "";
     nomeRota = "";
     nomeMotorista = "";
 
@@ -127,7 +129,8 @@ export class RotasPercorrerScreen extends React.Component {
     // Escolas
     escolasArray = [];
 
-    // Ícones
+    // Veículo
+    tipoVeiculo = 1;
     iconeVeiculo = iconeOnibus;
 
     // GPS
@@ -174,10 +177,19 @@ export class RotasPercorrerScreen extends React.Component {
 
     parseDados(dadoAlvo, usuario, db) {
         // Dados básicos da Rota
+        this.idRota = dadoAlvo["ID"];
         this.nomeRota = dadoAlvo["NOME"];
         this.nomeMotorista = usuario["NOME"];
 
+        // Veiculo
+        this.idVeiculo = "DESCONHECIDO";
+        let veiculosDaRota = db.rotapossuiveiculo.filter((rel) => rel.ID_ROTA == dadoAlvo.ID);
+        if (veiculosDaRota.length > 0) {
+            this.idVeiculo = veiculosDaRota[0].ID_VEICULO;
+        }
+
         // Ícone do veículo
+        this.tipoVeiculo = Number(dadoAlvo["TIPO"]);
         this.iconeVeiculo = Number(dadoAlvo["TIPO"]) == 1 ? iconeOnibus : iconeBarco;
 
         // GeoJSON
@@ -418,12 +430,17 @@ export class RotasPercorrerScreen extends React.Component {
 
             if (rotaDados) {
                 rotaDados.ID = idV;
+                rotaDados.DATA = data.toISOString().split("T")[0];
                 rotaDados.DATA_INICIO = data.toISOString();
                 rotaDados.DATA_ATUAL = data.toISOString();
                 rotaDados.DATA_FINAL = data.toISOString();
                 rotaDados.FINALIZOU = false;
                 rotaDados.NOME_ROTA = this.nomeRota;
+                rotaDados.ID_ROTA = this.idRota;
+                rotaDados.ID_VEICULO = this.idVeiculo;
+                rotaDados.TIPO_VEICULO = this.tipoVeiculo;
                 rotaDados.NOME_MOTORISTA = this.nomeMotorista;
+
                 rotaDados.COORDENADAS = [];
             }
 
@@ -440,8 +457,7 @@ export class RotasPercorrerScreen extends React.Component {
 
                 await Location.startLocationUpdatesAsync(LOCATION_BG_TASK, {
                     accuracy: Location.Accuracy.Highest,
-                    timeInterval: 1000,
-                    distanceInterval: 1,
+                    distanceInterval: 5,
                     showsBackgroundLocationIndicator: true,
                     foregroundService: {
                         notificationTitle: "SETE Rota",
@@ -453,8 +469,7 @@ export class RotasPercorrerScreen extends React.Component {
                 this.monitorPosicao = await Location.watchPositionAsync(
                     {
                         accuracy: Location.Accuracy.Highest,
-                        timeInterval: 1000,
-                        distanceInterval: 1,
+                        distanceInterval: 5,
                     },
                     ({ coords }) => {
                         processaDadosLocalizacao([coords]);
