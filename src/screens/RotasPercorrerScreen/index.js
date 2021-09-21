@@ -17,7 +17,7 @@ import * as TaskManager from "expo-task-manager";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { dbLimparAcoes, dbSalvar } from "../../redux/actions/db";
-import { locComecarRastreamento, locAtualizarPosicao, locPararRastreamento } from "../../redux/actions/localizacao";
+import { locLimparRastreamento, locComecarRastreamento, locAtualizarPosicao, locPararRastreamento } from "../../redux/actions/localizacao";
 import { store } from "../../store/Store";
 
 // Widgets
@@ -241,6 +241,7 @@ export class RotasPercorrerScreen extends React.Component {
 
             // Primeiro limpamos todas as rotas pendentes, caso possua
             this.props.dbLimparAcoes();
+            this.props.locLimparRastreamento();
 
             // Depois fazemos o parse de dados
             this.parseDados(dadoAlvo, usuario, db);
@@ -794,6 +795,7 @@ const mapDispatchProps = (dispatch) =>
         {
             dbLimparAcoes,
             dbSalvar,
+            locLimparRastreamento,
             locComecarRastreamento,
             locAtualizarPosicao,
             locPararRastreamento,

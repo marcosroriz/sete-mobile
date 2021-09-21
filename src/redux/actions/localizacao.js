@@ -8,6 +8,19 @@ import {
 let vetorPosicoes = [];
 let status = LOCALIZACAO_RASTREAMENTO_NAO_COMECOU;
 
+export function locLimparRastreamento() {
+    return (dispatch) => {
+        vetorPosicoes = [];
+        status = LOCALIZACAO_RASTREAMENTO_NAO_COMECOU;
+
+        dispatch({
+            type: LOCALIZACAO_RASTREAMENTO_NAO_COMECOU,
+            vetorPosicoes: [],
+            status,
+        });
+    };
+}
+
 export function locComecarRastreamento() {
     return (dispatch) => {
         vetorPosicoes = [];

@@ -17,7 +17,7 @@ import { connect } from "react-redux";
 
 // Widgets
 import { View } from "react-native";
-import { Appbar, List, Badge, Card, Text, Provider as PaperProvider } from "react-native-paper";
+import { Appbar, List, Badge, Card, Text, Provider as PaperProvider, Searchbar } from "react-native-paper";
 import { AlphabetList } from "react-native-section-alphabet-list";
 import { withTheme } from "react-native-paper";
 
@@ -38,16 +38,34 @@ export class ListarEntidadeScreen extends Component {
 
         // Esta editando?
         estaEditando: false,
+
+        // Lista original e filtrada
+        listaOriginal: [],
+        listaFiltrada: [],
     };
 
     componentDidMount() {
-        const { route } = this.props;
-        const { telaAlvo, subtitulo, estaEditando } = route.params;
+        const { route, db } = this.props;
+        const { telaAlvo, subtitulo, estaEditando, dadoAlvo, descricaoTela, campoUsarComoID, campoUsarComoValor } = route.params;
+
+        const listData = db[dadoAlvo].map((dado) => {
+            let listValor = dado[campoUsarComoValor].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            let listID = dado[campoUsarComoID];
+            return {
+                ...dado,
+                value: listValor,
+                key: listID,
+            };
+        });
+
+        listData.sort((a, b) => a.value.toLowerCase().localeCompare(b.value.toLowerCase()));
 
         this.setState({
             telaAlvo,
             subtitulo,
             estaEditando,
+            listaOriginal: listData,
+            listaFiltrada: listData,
         });
     }
 
@@ -57,6 +75,28 @@ export class ListarEntidadeScreen extends Component {
             estaEditando: this.state.estaEditando,
             subtitulo: this.state.subtitulo,
         });
+    };
+
+    realizarBusca = (str) => {
+        console.log("LENGTH", str.length);
+        // if (str.length > 1) {
+        const normSTR = str
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+
+        let novaListaFiltrada = this.state.listaOriginal.filter((elemento) => elemento.value.toLowerCase().startsWith(normSTR));
+        // console.log(novaListaFiltrada);
+        console.log("TAMANHO", novaListaFiltrada.length);
+
+        this.setState({
+            listaFiltrada: novaListaFiltrada,
+        });
+        // } else {
+        //     this.setState({
+        //         listaFiltrada: this.state.listaOriginal,
+        //     });
+        // }
     };
 
     renderItemDaLista = (item) => {
@@ -91,20 +131,11 @@ export class ListarEntidadeScreen extends Component {
     };
 
     render() {
-        const { route, db } = this.props;
-        const { subtitulo, dadoAlvo, descricaoTela, campoUsarComoID, campoUsarComoValor } = route.params;
+        const { route } = this.props;
+        const { subtitulo, descricaoTela } = route.params;
+        const { listaFiltrada } = this.state;
 
-        const listData = db[dadoAlvo].map((dado) => {
-            let listValor = dado[campoUsarComoValor].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            let listID = dado[campoUsarComoID];
-            return {
-                ...dado,
-                value: listValor,
-                key: listID,
-            };
-        });
-
-        let tamLista = listData.length;
+        let tamLista = listaFiltrada.length;
 
         return (
             <PaperProvider>
@@ -112,20 +143,30 @@ export class ListarEntidadeScreen extends Component {
                     <Appbar.BackAction onPress={() => this.props.navigation.goBack()} />
                     <Appbar.Content title="SETE" subtitle={subtitulo} />
                 </Appbar.Header>
-                <View style={styles.container}>
-                    <AlphabetList
-                        data={listData}
-                        style={{ flex: 1 }}
-                        indexLetterColor={"black"}
-                        renderCustomItem={this.renderItemDaLista}
-                        renderCustomSectionHeader={this.renderCabecalhoSecao}
-                        renderCustomListHeader={this.renderCabecalho(descricaoTela, tamLista)}
-                        getItemHeight={() => 60}
-                        sectionHeaderHeight={30}
-                        listHeaderHeight={80}
-                        // removeClippedSubviews={true}
-                    />
+                <View style={{ marginVertical: 10, marginHorizontal: 10 }}>
+                    <Searchbar placeholder="Buscar" onChangeText={this.realizarBusca} />
                 </View>
+
+                {tamLista > 0 ? (
+                    <View style={styles.screenContainer}>
+                        <AlphabetList
+                            data={listaFiltrada}
+                            style={{ flex: 1 }}
+                            indexLetterColor={"black"}
+                            renderCustomItem={this.renderItemDaLista}
+                            renderCustomSectionHeader={this.renderCabecalhoSecao}
+                            renderCustomListHeader={this.renderCabecalho(descricaoTela, tamLista)}
+                            getItemHeight={() => 60}
+                            sectionHeaderHeight={45}
+                            listHeaderHeight={80}
+                            // removeClippedSubviews={true}
+                        />
+                    </View>
+                ) : (
+                    <View style={styles.loadingContainer}>
+                        <Text style={styles.loadingTitle}>Nenhum resultado encontrado.</Text>
+                    </View>
+                )}
             </PaperProvider>
         );
     }
