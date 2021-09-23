@@ -326,14 +326,14 @@ export class DashboardScreen extends Component {
                                 label={numOperacoesPendentes + " operações pendentes"}
                                 style={styles.fabOperacoesPendentes}
                                 onPress={() => {
-                                    if (!estaConectadoInternet) {
-                                        Alert.alert("Você ainda está offline", "Tente enviar as operações pendentes em um local com internet");
-                                    } else {
+                                    // if (!estaConectadoInternet) {
+                                    //     Alert.alert("Você ainda está offline", "Tente enviar as operações pendentes em um local com internet");
+                                    // } else {
                                         this.setState({
                                             iniciouEnvioPendencias: true,
                                         });
                                         this.props.dbEnviaOperacoesPendentes();
-                                    }
+                                    // }
                                 }}
                             />
                         ) : null}

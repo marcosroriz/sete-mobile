@@ -11,25 +11,20 @@ const estadoInicial = {
 };
 
 export const localizacao = (estado = estadoInicial, acao) => {
-    if (acao.type == LOCALIZACAO_RASTREAMENTO_COMECAR) {
-        console.log("START", estado);
-        console.log("START", acao);
+    if (acao.type == LOCALIZACAO_RASTREAMENTO_COMECAR || 
+        acao.type == LOCALIZACAO_RASTREAMENTO_NAO_COMECOU) {
         return {
             ...estado,
             vetorPosicoes: [],
-            status: LOCALIZACAO_RASTREAMENTO_COMECAR,
+            status: acao.type,
         };
     } else if (acao.type == LOCALIZACAO_RASTREAMENTO_NOVAPOSICAO) {
-        console.log("UPDATE", estado);
-        console.log("UPDATE", acao);
         return {
             ...estado,
             vetorPosicoes: [...acao.vetorPosicoes],
             status: LOCALIZACAO_RASTREAMENTO_NOVAPOSICAO,
         };
     } else if (acao.type == LOCALIZACAO_RASTREAMENTO_TERMINAR) {
-        console.log("END", estado);
-        console.log("END", acao);
         return {
             ...estado,
             vetorPosicoes: acao.vetorPosicoes,

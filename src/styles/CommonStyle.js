@@ -19,7 +19,7 @@ export default StyleSheet.create({
         justifyContent: "center",
         backgroundColor: "#EFF2F7",
         fontSize: 30,
-        paddingBottom: 10,
+        // paddingBottom: 10,
     },
     scrollContainer: {
         alignItems: "center",

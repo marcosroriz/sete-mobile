@@ -169,7 +169,7 @@ export class RotasPercorrerScreen extends React.Component {
             this.mapRef.animateCamera({
                 center: { latitude, longitude },
                 pitch,
-                heading: 0,
+                heading,
                 zoom,
                 altitude,
             });
@@ -261,7 +261,7 @@ export class RotasPercorrerScreen extends React.Component {
             }
 
             const {
-                coords: { latitude, longitude, altitude, heading },
+                coords: { latitude, longitude, altitude },
             } = await Location.getCurrentPositionAsync({
                 accuracy: Location.Accuracy.Highest,
             });

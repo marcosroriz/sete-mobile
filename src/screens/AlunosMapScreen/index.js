@@ -56,6 +56,7 @@ export class AlunosMapScreen extends Component {
     state = {
         // Variáveis relacionados aos dados dos alunos
         finalizouCarregamentoDados: false,
+        finalizouCarregamentoComErro: false,
         alunos: [],
         region: {},
 
@@ -169,69 +170,79 @@ export class AlunosMapScreen extends Component {
             }
         });
 
-        // Centraliza o mapa na latitude e longitude média
-        let avgLatitude, avgLongitude;
-
-        if (alunosData.length != 0) {
-            avgLatitude = median(alunosLatData);
-            avgLongitude = median(alunosLonData);
-        } else {
-            Alert.alert("Erro!", "Nenhum aluno georeferenciado", [
+        if (alunosData.length == 0) {
+            Alert.alert("Erro!", "Nenhum aluno georeferenciado.", [
                 {
-                    text: "OK",
-                    onPress: () => {
-                        this.props.navigation.goBack();
-                    },
+                    text: "OK!",
+                    onPress: () => this.props.navigation.goBack(),
+                    style: "cancel",
                 },
             ]);
-        }
+        } else {
+            // Centraliza o mapa na latitude e longitude média
+            let avgLatitude, avgLongitude;
 
-        // Carregament dos filtros de escolas
-        let escolasArray = [{ label: "Todas as escolas", value: "" }];
-        db.escolas.forEach((e) => {
-            if (e.LOC_LATITUDE != null && e.LOC_LATITUDE != "" && e.LOC_LONGITUDE != null && e.LOC_LONGITUDE != "") {
-                escolasArray.push({
-                    label: e.NOME,
-                    value: e.ID,
-                    temGPS: true,
-                    latitude: e.LOC_LATITUDE,
-                    longitude: e.LOC_LONGITUDE,
-                });
+            if (alunosData.length != 0) {
+                avgLatitude = median(alunosLatData);
+                avgLongitude = median(alunosLonData);
             } else {
-                escolasArray.push({
-                    label: e.NOME,
-                    value: e.ID,
-                    temGPS: false,
-                });
+                Alert.alert("Erro!", "Nenhum aluno georeferenciado", [
+                    {
+                        text: "OK",
+                        onPress: () => {
+                            this.props.navigation.goBack();
+                        },
+                    },
+                ]);
             }
-        });
 
-        // Carregament dos filtros por turno
-        let turnosArray = [
-            { label: "Todos os turnos", value: "" },
-            { label: "Turno da Manhã (Matutino)", value: 1 },
-            { label: "Turno da Tarde (Vespertino)", value: 2 },
-            { label: "Turno da Noite (Noturno)", value: 4 },
-            { label: "Turno Integral", value: 3 },
-        ];
+            // Carregament dos filtros de escolas
+            let escolasArray = [{ label: "Todas as escolas", value: "" }];
+            db.escolas.forEach((e) => {
+                if (e.LOC_LATITUDE != null && e.LOC_LATITUDE != "" && e.LOC_LONGITUDE != null && e.LOC_LONGITUDE != "") {
+                    escolasArray.push({
+                        label: e.NOME,
+                        value: e.ID,
+                        temGPS: true,
+                        latitude: e.LOC_LATITUDE,
+                        longitude: e.LOC_LONGITUDE,
+                    });
+                } else {
+                    escolasArray.push({
+                        label: e.NOME,
+                        value: e.ID,
+                        temGPS: false,
+                    });
+                }
+            });
 
-        // Posicionamento do mapa
-        this.setState(
-            {
-                alunos: alunosData,
-                escolas: escolasArray,
-                turnos: turnosArray,
-                region: {
-                    latitude: avgLatitude,
-                    longitude: avgLongitude,
-                    latitudeDelta: 0.5,
-                    longitudeDelta: 0.5,
+            // Carregament dos filtros por turno
+            let turnosArray = [
+                { label: "Todos os turnos", value: "" },
+                { label: "Turno da Manhã (Matutino)", value: 1 },
+                { label: "Turno da Tarde (Vespertino)", value: 2 },
+                { label: "Turno da Noite (Noturno)", value: 4 },
+                { label: "Turno Integral", value: 3 },
+            ];
+
+            // Posicionamento do mapa
+            this.setState(
+                {
+                    alunos: alunosData,
+                    escolas: escolasArray,
+                    turnos: turnosArray,
+                    region: {
+                        latitude: avgLatitude,
+                        longitude: avgLongitude,
+                        latitudeDelta: 0.5,
+                        longitudeDelta: 0.5,
+                    },
                 },
-            },
-            () => {
-                this.setState({ finalizouCarregamentoDados: true });
-            }
-        );
+                () => {
+                    this.setState({ finalizouCarregamentoDados: true });
+                }
+            );
+        }
     }
 
     async componentDidMount() {
@@ -559,7 +570,7 @@ export class AlunosMapScreen extends Component {
                                 onPress={() => {
                                     this.setState({ mostraFiltroEscola: true });
                                 }}
-                                visible={true}
+                                visible={escolas.length > 0}
                             />
                             <FAB
                                 icon="filter-outline"

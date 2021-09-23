@@ -78,25 +78,16 @@ export class ListarEntidadeScreen extends Component {
     };
 
     realizarBusca = (str) => {
-        console.log("LENGTH", str.length);
-        // if (str.length > 1) {
         const normSTR = str
             .toLowerCase()
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "");
 
-        let novaListaFiltrada = this.state.listaOriginal.filter((elemento) => elemento.value.toLowerCase().startsWith(normSTR));
-        // console.log(novaListaFiltrada);
-        console.log("TAMANHO", novaListaFiltrada.length);
+        let novaListaFiltrada = this.state.listaOriginal.filter((elemento) => elemento.value.toLowerCase().includes(normSTR));
 
         this.setState({
             listaFiltrada: novaListaFiltrada,
         });
-        // } else {
-        //     this.setState({
-        //         listaFiltrada: this.state.listaOriginal,
-        //     });
-        // }
     };
 
     renderItemDaLista = (item) => {
