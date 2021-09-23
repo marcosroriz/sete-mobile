@@ -40,7 +40,7 @@
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-intl": "^5.20.2",
-    "react-native": "~0.63.4",
+    "react-native": "~0.64.1",
     "react-native-chart-kit": "^6.11.0",
     "react-native-datepicker": "^1.7.2",
     "react-native-elements": "^3.4.2",
