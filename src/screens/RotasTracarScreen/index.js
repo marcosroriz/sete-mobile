@@ -234,6 +234,7 @@ class RotasTracarScreen extends Component {
                 await Location.startLocationUpdatesAsync(LOCATION_BG_TASK, {
                     accuracy: Location.Accuracy.Highest,
                     distanceInterval: 5,
+                    timeInterval: 10,                    
                     showsBackgroundLocationIndicator: true,
                     foregroundService: {
                         notificationTitle: "SETE Rota",

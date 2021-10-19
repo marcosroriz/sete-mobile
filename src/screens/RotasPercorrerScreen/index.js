@@ -58,6 +58,9 @@ const iconeProbMecanico = require("../../../assets/probmecanico-marker.png");
 // Variável lógica que indica se estamos no IOS
 const isIOS = Platform.OS === "ios";
 
+// Escape Regex
+const escapeRegExp = (str) => str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '-');
+
 // Variável que identifica a rota a ser rastreada
 let rotaDados = {};
 
@@ -427,7 +430,7 @@ export class RotasPercorrerScreen extends React.Component {
             this.props.locComecarRastreamento();
 
             let data = new Date();
-            let idV = this.nomeRota + "__" + data.toISOString();
+            let idV = escapeRegExp(this.nomeRota) + "__" + data.toISOString();
 
             if (rotaDados) {
                 rotaDados.ID = idV;
@@ -459,6 +462,7 @@ export class RotasPercorrerScreen extends React.Component {
                 await Location.startLocationUpdatesAsync(LOCATION_BG_TASK, {
                     accuracy: Location.Accuracy.Highest,
                     distanceInterval: 5,
+                    timeInterval: 10,
                     showsBackgroundLocationIndicator: true,
                     foregroundService: {
                         notificationTitle: "SETE Rota",
